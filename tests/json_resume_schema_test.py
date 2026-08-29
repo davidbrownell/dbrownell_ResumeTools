@@ -12,7 +12,7 @@ import yaml
 
 from pydantic import TypeAdapter, ValidationError
 
-from dbrownell_ResumeTools.json_resume_schema import (
+from dbrownell_ResumeTools.lib.json_resume_schema import (
     Award,
     Basics,
     Education,

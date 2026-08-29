@@ -262,6 +262,7 @@ version = "0.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "dbrownell-common" },
+    { name = "lessish" },
     { name = "markdown-it-py" },
     { name = "pydantic" },
     { name = "pyyaml" },
@@ -282,6 +283,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "dbrownell-common", specifier = ">=0.17.3" },
+    { name = "lessish", specifier = ">=0.1.0" },
     { name = "markdown-it-py", specifier = ">=4.2.0" },
     { name = "pydantic", specifier = ">=2.13.5" },
     { name = "pyyaml", specifier = ">=6.0.3" },
@@ -397,6 +399,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/19/74/a633ee74eb36c44aa6d1095e7cc5569bebf04342ee146178e2d36600708b/jsonschema_specifications-2025.9.1.tar.gz", hash = "sha256:b540987f239e745613c7a9176f3edb72b832a4ac465cf02712288397832b5e8d", size = 32855, upload-time = "2025-09-08T01:34:59.186Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/41/45/1a4ed80516f02155c51f51e8cedb3c1902296743db0bbc66608a0db2814f/jsonschema_specifications-2025.9.1-py3-none-any.whl", hash = "sha256:98802fee3a11ee76ecaca44429fda8a41bff98b00a0f2838151b113f210cc6fe", size = 18437, upload-time = "2025-09-08T01:34:57.871Z" },
+]
+
+[[package]]
+name = "lessish"
+version = "0.1.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/e7/5a/18edbed2236334e79f947ea7512cbd96fe9fe163154cd7ceaf9257b63c6b/lessish-0.1.0.tar.gz", hash = "sha256:8e1c7429c1914f912a4c41066b8221b90c4748e1258f98fd3763641cecc8ba57", size = 309670, upload-time = "2026-06-02T17:31:31.166Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2e/66/1d38d0356dbc835b0237f6a24486bcd369d0a44aca5811d20d566a1239bb/lessish-0.1.0-py3-none-any.whl", hash = "sha256:6e55199df221b35009e0db70c2e480b549e878723e6f41ab0fbf891540d64027", size = 370831, upload-time = "2026-06-02T17:31:33.219Z" },
 ]
 
 [[package]]

@@ -1,5 +1,7 @@
 """Unit tests for __main__.py."""
 
+import textwrap
+
 from pathlib import Path
 
 import pytest
@@ -197,6 +199,101 @@ def test_Css(tmp_path: Path):
         assert dest_css_filename.is_symlink()
         # Windows returns the link target decorated with an extended-length path prefix
         assert dest_css_filename.resolve() == css_filename.resolve()
+
+
+# ----------------------------------------------------------------------
+def test_Less(tmp_path: Path):
+    content_filename = _CreateResumeFile(tmp_path)
+
+    css_filename = tmp_path / "styles.less"
+    css_filename.write_text("@color: red;\nbody { color: @color; }\n", encoding="utf-8")
+
+    output_directory = tmp_path / "output"
+
+    result = runner.invoke(app, [str(content_filename), str(css_filename), str(output_directory)])
+
+    assert result.exit_code == 0, result.output
+
+    dest_css_filename = output_directory / "styles.css"
+
+    assert 'href="styles.css"' in (output_directory / "index.html").read_text(encoding="utf-8")
+
+    # The compiled content is written to the output directory itself, so it remains available once
+    # the temporary directory used while generating content is removed
+    assert not dest_css_filename.is_symlink()
+    assert dest_css_filename.read_text(encoding="utf-8") == textwrap.dedent(
+        """\
+        body {
+          color: red;
+        }
+        """,
+    )
+
+
+# ----------------------------------------------------------------------
+def test_LessWithImport(tmp_path: Path):
+    """'@import' statements are resolved relative to the less content."""
+
+    content_filename = _CreateResumeFile(tmp_path)
+
+    (tmp_path / "colors.less").write_text("@color: blue;\n", encoding="utf-8")
+
+    css_filename = tmp_path / "styles.less"
+    css_filename.write_text('@import "colors.less";\nbody { color: @color; }\n', encoding="utf-8")
+
+    output_directory = tmp_path / "output"
+
+    result = runner.invoke(app, [str(content_filename), str(css_filename), str(output_directory)])
+
+    assert result.exit_code == 0, result.output
+    assert (output_directory / "styles.css").read_text(encoding="utf-8") == textwrap.dedent(
+        """\
+        body {
+          color: blue;
+        }
+        """,
+    )
+
+
+# ----------------------------------------------------------------------
+def test_LessReplacesAnExistingLink(tmp_path: Path):
+    """A link created when a css stylesheet was generated is replaced rather than written through.
+
+    Without this, the compiled content would overwrite the stylesheet that the link references.
+    """
+
+    if not _SymlinksAreSupported(tmp_path):
+        pytest.skip("Symbolic links are not supported.")
+
+    content_filename = _CreateResumeFile(tmp_path)
+    css_filename = _CreateCssFile(tmp_path)
+    output_directory = tmp_path / "output"
+
+    result = runner.invoke(app, [str(content_filename), str(css_filename), str(output_directory)])
+
+    assert result.exit_code == 0, result.output
+
+    dest_css_filename = output_directory / "styles.css"
+
+    assert dest_css_filename.is_symlink()
+
+    # The less content shares its stem with the css content, so the compiled content is written to
+    # the name that the link occupies
+    less_filename = tmp_path / "styles.less"
+    less_filename.write_text("@color: blue;\nbody { color: @color; }\n", encoding="utf-8")
+
+    result = runner.invoke(app, [str(content_filename), str(less_filename), str(output_directory)])
+
+    assert result.exit_code == 0, result.output
+    assert css_filename.read_text(encoding="utf-8") == "body { color: red; }\n"
+    assert not dest_css_filename.is_symlink()
+    assert dest_css_filename.read_text(encoding="utf-8") == textwrap.dedent(
+        """\
+        body {
+          color: blue;
+        }
+        """,
+    )
 
 
 # ----------------------------------------------------------------------

@@ -6,8 +6,10 @@ from typing import Annotated
 
 import typer
 
-from dbrownell_Common.Streams.DoneManager import DoneManager, Flags as DoneManagerFlags
+from lessish import Lessish
 from typer.core import TyperGroup
+
+from dbrownell_Common.Streams.DoneManager import DoneManager, Flags as DoneManagerFlags
 
 from dbrownell_ResumeTools.lib.generate_html import GenerateHtml as GenerateHtmlImpl
 from dbrownell_ResumeTools.lib.postprocess_markdown import PostprocessMarkdown as PostprocessMarkdownImpl
@@ -43,10 +45,10 @@ def GenerateHtml(
             resolve_path=True,
         ),
     ],
-    css_filename: Annotated[
+    style_filename: Annotated[
         Path,
         typer.Argument(
-            help="Path to the stylesheet referenced by the generated html.",
+            help="Path to the css or less stylesheet referenced by the generated html; less content is compiled to css.",
             dir_okay=False,
             exists=True,
             resolve_path=True,
@@ -123,13 +125,48 @@ def GenerateHtml(
             if not postprocessed_filename.is_file():
                 postprocessed_filename = content_filename
 
+        if style_filename.suffix.lower() == _LESS_EXTENSION:
+            with dm.Nested(f"Compiling '{style_filename}'..."):
+                style_filename = _CompileLess(style_filename, output_directory)
+
         with dm.Nested("Generating html...") as generate_dm:
-            GenerateHtmlImpl(generate_dm, postprocessed_filename, output_directory, css_filename)
+            GenerateHtmlImpl(generate_dm, postprocessed_filename, output_directory, style_filename)
 
         # The content is not served when errors were encountered while generating it.
         if serve and dm.result >= 0:
             dm.WriteLine("")
             ServeImpl(dm, output_directory, host, port, launch_browser=browser)
+
+
+# ----------------------------------------------------------------------
+# ----------------------------------------------------------------------
+# ----------------------------------------------------------------------
+_LESS_EXTENSION = ".less"
+
+
+# ----------------------------------------------------------------------
+def _CompileLess(filename: Path, output_directory: Path) -> Path:
+    """Compile less content into a css file within `output_directory`.
+
+    The result is written to the output directory rather than to a temporary one so that the
+    generated content continues to reference a stylesheet that is available once the process exits.
+    """
+
+    output_directory.mkdir(parents=True, exist_ok=True)
+    output_filename = output_directory / filename.with_suffix(".css").name
+
+    # A link left behind when a css stylesheet was previously generated is removed rather than
+    # written through, as writing through it would overwrite the stylesheet that it references.
+    if output_filename.is_symlink():
+        output_filename.unlink()
+
+    # `filename` is provided so that '@import' statements are resolved relative to the less content.
+    output_filename.write_text(
+        Lessish().compile(filename.read_text(encoding="utf-8"), filename=str(filename)),
+        encoding="utf-8",
+    )
+
+    return output_filename
 
 
 # ----------------------------------------------------------------------

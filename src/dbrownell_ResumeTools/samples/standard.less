@@ -1,0 +1,222 @@
+/* Every selector corresponds to the markup produced by lib/generate_html.py. Nested divs are left
+   inline rather than made inline-block by an id-qualified rule, as such a rule would take precedence
+   over the ones Bootstrap defines for `.row` and `.col`. */
+
+@icon-padding-right: 5px;
+@widget-color: darkgray;
+@highlight-color: #007bff;
+
+.special-text-mixin() {
+    font-family: "Merriweather";
+    font-variant: small-caps;
+}
+
+html, body {
+    height: 100%;
+    display: grid;
+}
+
+body {
+    font-family: "Open Sans";
+    font-size: 1em;
+    padding: 10px;
+}
+
+div {
+    display: inline;
+}
+
+a {
+    color: @highlight-color;
+}
+
+#content {
+    margin: auto;
+    display: block;
+}
+
+.header {
+    .special-text-mixin();
+
+    &.section {
+        font-size: 1.5em;
+        font-weight: bold;
+    }
+
+    &.subsection {
+        padding-left: 30px;
+        padding-bottom: 10px;
+        text-align: center;
+
+        div:first-of-type {
+            font-size: 1.2em;
+
+            // A header whose only content is that div (a skill name, for example) is not followed
+            // by a line break.
+            &:not(:last-of-type)::after {
+                content: "\A";
+                white-space: pre;
+            }
+        }
+
+        .startDate::after {
+            content: " - ";
+        }
+    }
+}
+
+.content {
+    &.section {
+        margin: auto;
+    }
+
+    // Rendered markdown content may introduce headings.
+    h2 {
+        .special-text-mixin();
+
+        font-size: 1.5em;
+        font-weight: bold;
+    }
+}
+
+.icon {
+    padding-right: @icon-padding-right;
+
+    i {
+        color: @widget-color;
+    }
+
+    a {
+        i:hover {
+            color: @highlight-color;
+        }
+    }
+}
+
+.picture {
+    text-align: center;
+    margin: auto;
+
+    img {
+        border: 2px solid black;
+        border-radius: 25%;
+        width: 100px;
+    }
+}
+
+.picture + .name {
+    .special-text-mixin();
+
+    font-size: 4em;
+    font-weight: bold;
+    margin: auto;
+}
+
+.container-fluid {
+    .row:not(.line_item) {
+        padding-top: 30px;
+    }
+
+    .row:not(.line_item) + .row.line_item {
+        padding-top: 10px;
+    }
+
+    &.inline {
+        display: block;
+        padding: 0px;
+
+        .row {
+            padding-top: 0px;
+
+            .col {
+                white-space: nowrap;
+            }
+        }
+    }
+
+    // The title row.
+    &:not(.inline) > .row:first-of-type {
+        margin-top: 0px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        background-image: linear-gradient(to bottom right, lighten(@widget-color, 20%), darken(@widget-color, 10%));
+        border: 2px solid black;
+    }
+}
+
+.position, .studyType {
+    .special-text-mixin();
+
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.location {
+    // The separator precedes the value rather than follows it, as the region and country code are
+    // omitted when they are not available; the city is always displayed.
+    .region, .countryCode {
+        &::before {
+            content: ", ";
+        }
+    }
+}
+
+.skill {
+    &.line_item {
+        .header {
+            text-align: left;
+        }
+
+        .content {
+            text-align: center;
+
+            .item {
+                padding-right: @icon-padding-right;
+
+                .badge-primary {
+                    font-size: 1em;
+                    margin-bottom: 1em;
+                    border-radius: 5px;
+
+                    &.link {
+                        background-color: @widget-color;
+
+                        &:hover {
+                            background-color: @highlight-color;
+                        }
+                    }
+
+                    &.nolink {
+                        border-style: solid;
+                        background: none;
+                        color: @widget-color;
+                    }
+                }
+            }
+        }
+    }
+}
+
+.education {
+    .studyType {
+        &::after {
+            content: "\A";
+            white-space: pre;
+        }
+    }
+}
+
+.startDate, .endDate {
+    font-size: .9em;
+}
+
+@media print {
+    .skill.line_item {
+        font-size: .85em !important;
+
+        .keywords .item a {
+            text-decoration: none !important;
+            color: @highlight-color !important;
+        }
+    }
+}

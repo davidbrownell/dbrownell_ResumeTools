@@ -25,10 +25,39 @@
 - [License](#license)
 
 ## Overview
-TODO: Complete this section
+`dbrownell_ResumeTools` separates a resume's content from its presentation.
+
+Content is written once as [JSON Resume](https://jsonresume.org/) data (json or yaml). Presentation is a [css](https://developer.mozilla.org/en-US/docs/Web/CSS) or [less](https://lesscss.org/) stylesheet applied to the html generated from that content. Updating a resume is then a matter of editing data rather than editing a document, and restyling one is a matter of changing a stylesheet rather than reformatting every entry by hand.
+
+Text values within the content may be written as [markdown](https://commonmark.org/), so emphasis, links, and lists live alongside the data that they decorate.
 
 ### How to use `dbrownell_ResumeTools`
-TODO: Complete this section
+Generate html from resume content and a stylesheet:
+
+```shell
+uv run dbrownell_ResumeTools <content_filename> <style_filename> <output_directory>
+```
+
+| Argument | Description |
+| --- | --- |
+| `<content_filename>` | json or yaml content that conforms to the [JSON Resume](https://jsonresume.org/) schema. |
+| `<style_filename>` | A `.css` or `.less` stylesheet; less content is compiled to css. |
+| `<output_directory>` | Directory populated with the generated `index.html` and the stylesheet that it references. |
+
+[Sample content and stylesheets](https://github.com/davidbrownell/dbrownell_ResumeTools/tree/main/src/dbrownell_ResumeTools/samples) are included with the package; this command generates and displays the sample resume when it is run from that directory:
+
+```shell
+uv run dbrownell_ResumeTools resume.json standard.less ./output --serve --browser
+```
+
+`--serve` serves the generated content over http and `--browser` displays it in a browser, which is served until that browser is closed. Run `uv run dbrownell_ResumeTools --help` for all available options.
+
+#### Creating a pdf
+Print the displayed content to a pdf from the browser itself (`Ctrl+P` / `Cmd+P`, then "Save as PDF"). `standard.less` defines `@media print` rules that compact the content for a printed page, so no separate command is involved.
+
+This is `resume.json` rendered with `standard.less`:
+
+<img src="https://raw.githubusercontent.com/davidbrownell/dbrownell_ResumeTools/main/docs/sample_resume.png" alt="Sample resume generated from resume.json and standard.less" width="600" />
 
 <!-- Content below this delimiter will be copied to the generated README.md file. DO NOT REMOVE THIS COMMENT, as it will cause regeneration to fail. -->
 

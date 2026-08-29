@@ -261,8 +261,10 @@ name = "dbrownell-resumetools"
 version = "0.0.0"
 source = { editable = "." }
 dependencies = [
+    { name = "dbrownell-common" },
     { name = "pydantic" },
     { name = "pyyaml" },
+    { name = "typer" },
 ]
 
 [package.dev-dependencies]
@@ -278,8 +280,10 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "dbrownell-common", specifier = ">=0.17.3" },
     { name = "pydantic", specifier = ">=2.13.5" },
     { name = "pyyaml", specifier = ">=6.0.3" },
+    { name = "typer", specifier = ">=0.27.2" },
 ]
 
 [package.metadata.requires-dev]

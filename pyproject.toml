@@ -12,8 +12,10 @@ readme = "README.md"
 authors = [{ name = "Dave Brownell", email = "github@DavidBrownell.com" }]
 requires-python = ">= 3.14"
 dependencies = [
+    "dbrownell-common>=0.17.3",
     "pydantic>=2.13.5",
     "pyyaml>=6.0.3",
+    "typer>=0.27.2",
 ]
 classifiers = [
     "Operating System :: MacOS",
@@ -22,6 +24,9 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3.14",
 ]
+
+[project.scripts]
+dbrownell_ResumeTools = "dbrownell_ResumeTools.__main__:app"
 
 [project.license]
 text = "MIT"

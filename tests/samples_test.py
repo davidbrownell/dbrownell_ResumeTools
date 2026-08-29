@@ -1,14 +1,19 @@
 """Unit tests that verify the sample files in src/dbrownell_ResumeTools/samples."""
 
 import dataclasses
+import io
+import re
 
 from pathlib import Path
 from typing import Any
 
 import pytest
 
-from dbrownell_ResumeTools import json_resume_schema
-from dbrownell_ResumeTools.json_resume_schema import (
+from dbrownell_Common.Streams.DoneManager import DoneManager
+
+from dbrownell_ResumeTools.lib import json_resume_schema
+from dbrownell_ResumeTools.lib.generate_html import GenerateHtml
+from dbrownell_ResumeTools.lib.json_resume_schema import (
     Award,
     Basics,
     Education,
@@ -27,7 +32,10 @@ from dbrownell_ResumeTools.json_resume_schema import (
 
 
 # ----------------------------------------------------------------------
-SAMPLES_DIR = Path(json_resume_schema.__file__).parent / "samples"
+# The samples are located within the package itself rather than within `lib`
+SAMPLES_DIR = Path(json_resume_schema.__file__).parent.parent / "samples"
+
+STANDARD_CSS_FILENAME = SAMPLES_DIR / "standard.css"
 
 FULL_SAMPLE_STEMS = ["resume"]
 MINIMAL_SAMPLE_STEMS = ["resume_minimal"]
@@ -58,9 +66,13 @@ ALL_DATACLASSES = [
 # |
 # ----------------------------------------------------------------------
 def _AllSampleFilenames() -> list[Path]:
-    """Return every sample file, sorted by name."""
+    """Return every resume sample file, sorted by name.
 
-    return sorted(SAMPLES_DIR.iterdir())
+    The samples directory contains content that is not a resume (stylesheets, for example); those
+    files are not returned.
+    """
+
+    return sorted(item for item in SAMPLES_DIR.iterdir() if item.suffix in ALL_SAMPLE_SUFFIXES)
 
 
 # ----------------------------------------------------------------------
@@ -99,6 +111,30 @@ def _AllFields() -> set[tuple[str, str]]:
         (the_class.__name__, dataclass_field.name)
         for the_class in ALL_DATACLASSES
         for dataclass_field in dataclasses.fields(the_class)
+    }
+
+
+# ----------------------------------------------------------------------
+def _StylesheetIdentifiers(content: str) -> set[str]:
+    """Return the ids and classes targeted by the stylesheet provided."""
+
+    content = re.sub(r"/\*.*?\*/", " ", content, flags=re.DOTALL)
+
+    # Declaration blocks are the only blocks that do not themselves contain a block, so removing them
+    # leaves the selectors (including those within an at-rule) and nothing that resembles one.
+    content = re.sub(r"\{[^{}]*\}", " ", content)
+
+    return set(re.findall(r"[#.](-?[A-Za-z_][\w-]*)", content))
+
+
+# ----------------------------------------------------------------------
+def _MarkupIdentifiers(content: str) -> set[str]:
+    """Return the ids and classes assigned within the html provided."""
+
+    return {
+        identifier
+        for match in re.finditer(r'\b(?:id|class)="([^"]*)"', content)
+        for identifier in match.group(1).split()
     }
 
 
@@ -187,3 +223,40 @@ def test_FullSampleDemonstratesOptionalOmissions(stem: str):
     assert any(item.level is None for item in resume_data.skills)
     assert any(item.keywords == [] for item in resume_data.interests)
     assert any(item.reference is None for item in resume_data.references)
+
+
+# ----------------------------------------------------------------------
+# |
+# |  Stylesheet
+# |
+# ----------------------------------------------------------------------
+@pytest.mark.parametrize("stem", FULL_SAMPLE_STEMS)
+def test_StandardCssTargetsTheGeneratedMarkup(tmp_path: Path, stem: str):
+    """Nothing that the bundled stylesheet targets is absent from the generated markup.
+
+    Without this, a selector may be renamed on one side of the pair and silently style nothing.
+    """
+
+    output_directory = tmp_path / "output"
+
+    sink = io.StringIO()
+
+    with DoneManager.Create(sink, "Testing...") as dm:
+        GenerateHtml(
+            dm,
+            SAMPLES_DIR / f"{stem}{ALL_SAMPLE_SUFFIXES[0]}",
+            output_directory,
+            STANDARD_CSS_FILENAME,
+        )
+
+    stylesheet_identifiers = _StylesheetIdentifiers(
+        STANDARD_CSS_FILENAME.read_text(encoding="utf-8"),
+    )
+
+    assert stylesheet_identifiers
+
+    markup_identifiers = _MarkupIdentifiers(
+        (output_directory / "index.html").read_text(encoding="utf-8"),
+    )
+
+    assert stylesheet_identifiers - markup_identifiers == set()

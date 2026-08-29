@@ -1,4 +1,4 @@
-# noqa: CPY001, D104
+# noqa: D104
 
 from importlib.metadata import version
 

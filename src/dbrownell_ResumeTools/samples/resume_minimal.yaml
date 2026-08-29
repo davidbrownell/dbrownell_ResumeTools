@@ -1,0 +1,5 @@
+# Sample resume containing only the fields required by json_resume.SimpleSchema.
+# Every section other than `basics` is optional and defaults to an empty list.
+
+basics:
+  name: Sam Taylor

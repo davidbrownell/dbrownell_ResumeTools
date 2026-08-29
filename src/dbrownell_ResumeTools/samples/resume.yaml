@@ -1,0 +1,175 @@
+# Sample resume that populates every field defined in json_resume.SimpleSchema.
+# See json_resume_schema.py for the corresponding dataclasses.
+
+basics:
+  name: Jane Q. Developer
+  label: Principal Software Engineer
+  picture: https://example.com/jane/photo.jpg
+  email: jane@example.com
+  phone: (555) 555-0142
+  website: https://jane.example.com
+  summary: >-
+    Principal engineer with fifteen years of experience building distributed
+    systems, developer tooling, and the release infrastructure that keeps them
+    shipping.
+
+  location:
+    address: 1234 Cypress Street, Suite 400
+    city: Raleigh
+    postalCode: "27601"
+    countryCode: US
+    region: NC
+
+  profiles:
+    - network: GitHub
+      username: janeqdeveloper
+      url: https://github.com/janeqdeveloper
+    - network: LinkedIn
+      username: jane-q-developer
+      url: https://www.linkedin.com/in/jane-q-developer
+
+work:
+  - company: Northwind Systems
+    position: Principal Software Engineer
+    website: https://northwind.example.com
+    startDate: 2019-03-01
+    # endDate is omitted to indicate a current position.
+    summary: Technical lead for the platform group that owns build, release, and observability tooling.
+    highlights:
+      - Cut median CI wall-clock time from 42 minutes to 9 by introducing remote build caching.
+      - Designed the multi-region failover strategy now used by all customer-facing services.
+      - Mentored six engineers, three of whom were promoted to senior within two years.
+
+  - company: Contoso Analytics
+    position: Senior Software Engineer
+    website: https://contoso.example.com
+    startDate: 2014-06-15
+    endDate: 2019-02-28
+    summary: Built and operated the ingestion pipeline behind the company's real-time analytics product.
+    highlights:
+      - Scaled event ingestion from 12K to 400K events per second.
+      - Replaced a nightly batch job with a streaming implementation, reducing data latency to under a minute.
+
+volunteer:
+  - organization: Code for the Triangle
+    website: https://codeforthetriangle.example.org
+    position: Technical Mentor
+    startDate: 2020-09-01
+    endDate: 2023-05-31
+    summary: Mentored volunteer developers building civic technology for local nonprofits.
+    highlights:
+      - Led a twelve-week curriculum on version control and code review.
+      - Shipped a volunteer-scheduling application used by four regional food banks.
+
+education:
+  - institution: Georgia Institute of Technology
+    area: Computer Science
+    studyType: Master of Science
+    startDate: 2012-08-20
+    endDate: 2014-05-03
+    gpa: "3.9"
+    courses:
+      - CS 6210 - Advanced Operating Systems
+      - CS 6250 - Computer Networks
+      - CS 6300 - Software Development Process
+
+  - institution: University of North Carolina
+    area: Computer Science
+    studyType: Bachelor of Science
+    startDate: 2008-08-18
+    endDate: 2012-05-12
+    gpa: "3.7"
+    courses:
+      - COMP 410 - Data Structures
+      - COMP 550 - Algorithms and Analysis
+
+awards:
+  - title: Engineering Excellence Award
+    date: 2022-11-10
+    awarder: Northwind Systems
+    summary: Awarded annually to one engineer for sustained impact on company-wide technical infrastructure.
+
+  - title: Best Paper, Industry Track
+    date: 2018-04-19
+    awarder: International Conference on Software Engineering
+    summary: Recognized for the paper describing Contoso's incremental stream-processing architecture.
+
+publications:
+  - name: Incremental Stream Processing at Scale
+    publisher: ACM Queue
+    releaseDate: 2018-04-19
+    website: https://example.com/publications/incremental-stream-processing
+    summary: A practitioner's account of migrating a batch analytics pipeline to a streaming architecture.
+
+  - name: Reproducible Builds for Polyglot Repositories
+    publisher: IEEE Software
+    releaseDate: 2021-07-01
+    website: https://example.com/publications/reproducible-builds
+    summary: Techniques for achieving bit-identical build artifacts across heterogeneous toolchains.
+
+skills:
+  - name: Python
+    level: Master
+    keywords:
+      - asyncio
+      - pydantic
+      - pytest
+
+  - name: Distributed Systems
+    level: Advanced
+    keywords:
+      - consensus
+      - sharding
+      - observability
+
+  - name: Rust
+    level: Intermediate
+    keywords:
+      - tokio
+      - serde
+
+  - name: Terraform
+    level: Beginner
+    keywords:
+      - modules
+
+  - name: Kubernetes
+    # level is optional and omitted here.
+    keywords:
+      - operators
+      - helm
+
+languages:
+  - language: English
+    fluency: Native speaker
+  - language: Spanish
+    fluency: Professional working proficiency
+  - language: German
+    fluency: Elementary proficiency
+
+interests:
+  - name: Woodworking
+    keywords:
+      - hand tools
+      - joinery
+
+  - name: Trail Running
+    keywords:
+      - ultramarathons
+
+  - name: Amateur Radio
+    # keywords is optional and omitted here.
+
+references:
+  - name: Alex Rivera, VP of Engineering at Northwind Systems
+    reference: >-
+      Jane is the engineer other engineers ask for help. She leaves every system
+      she touches simpler than she found it.
+
+  - name: Priya Raman, Director of Data at Contoso Analytics
+    # reference text is optional and omitted here.
+
+meta:
+  canonical: https://jane.example.com/resume.json
+  version: "1.0.0"
+  lastModified: "2026-08-29T09:00:00"

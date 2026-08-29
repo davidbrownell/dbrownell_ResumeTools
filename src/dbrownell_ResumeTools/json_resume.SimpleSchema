@@ -1,0 +1,86 @@
+# SimpleSchema for JSON Resume (https://jsonresume.org) Schema (https://jsonresume.org/schema/).
+# This is useful so that data can be written in YAML (which supports comments and other conveniences),
+# converted to JSON, and then imported by JSON Resume.
+
+(Date date)
+
+<resume_data>:
+    <basics>:
+        <name string>
+        <label string ?>
+        <picture uri ?>
+        <email string ?>
+        <phone string ?>
+        <website string ?>
+        <summary string ?>
+
+        <location ?>:
+            <address string>
+            <city string>
+            <postalCode string>
+            <countryCode string ?>
+            <region string ?> # state
+
+        <profiles *>:
+            <network string>
+            <username string>
+            <url uri>
+
+    <work *>:
+        <company string>
+        <position string>
+        <website uri ?>
+        <startDate Date>
+        <endDate Date ?>
+        <summary string>
+        <highlights string *>
+
+    <volunteer *>:
+        <organization string>
+        <website uri ?>
+        <position string>
+        <startDate Date>
+        <endDate Date ?>
+        <summary string>
+        <highlights string *>
+
+    <education *>:
+        <institution string>
+        <area string>
+        <studyType string>
+        <startDate Date ?>
+        <endDate Date ?>
+        <gpa string ?>
+        <courses string *>
+
+    <awards *>:
+        <title string>
+        <date_ Date name="date">
+        <awarder string>
+        <summary string>
+
+    <publications *>:
+        <name string>
+        <publisher string>
+        <releaseDate Date>
+        <website uri ?>
+        <summary string>
+
+    <skills *>:
+        <name string>
+        <level enum values=["Beginner", "Intermediate", "Advanced", "Master"] ?>
+        <keywords string *>
+
+    <languages *>:
+        <language string>
+        <fluency string>
+
+    <interests *>:
+        <name string>
+        <keywords string *>
+
+    <references *>:
+        <name string>
+        <reference string ?>
+
+    <meta any ?>

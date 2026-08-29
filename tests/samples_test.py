@@ -9,6 +9,8 @@ from typing import Any
 
 import pytest
 
+from lessish import Lessish
+
 from dbrownell_Common.Streams.DoneManager import DoneManager
 
 from dbrownell_ResumeTools.lib import json_resume_schema
@@ -36,6 +38,7 @@ from dbrownell_ResumeTools.lib.json_resume_schema import (
 SAMPLES_DIR = Path(json_resume_schema.__file__).parent.parent / "samples"
 
 STANDARD_CSS_FILENAME = SAMPLES_DIR / "standard.css"
+STANDARD_LESS_FILENAME = SAMPLES_DIR / "standard.less"
 
 FULL_SAMPLE_STEMS = ["resume"]
 MINIMAL_SAMPLE_STEMS = ["resume_minimal"]
@@ -229,6 +232,21 @@ def test_FullSampleDemonstratesOptionalOmissions(stem: str):
 # |
 # |  Stylesheet
 # |
+# ----------------------------------------------------------------------
+def test_StandardCssIsCompiledFromStandardLess():
+    """The bundled stylesheets are the same content expressed in two forms.
+
+    The less content is the one that is maintained; without this, an edit to it would not reach the
+    css content and the two would silently drift apart.
+    """
+
+    assert STANDARD_CSS_FILENAME.read_text(encoding="utf-8") == Lessish().compile(
+        STANDARD_LESS_FILENAME.read_text(encoding="utf-8"),
+        filename=str(STANDARD_LESS_FILENAME),
+        compress=True,
+    )
+
+
 # ----------------------------------------------------------------------
 @pytest.mark.parametrize("stem", FULL_SAMPLE_STEMS)
 def test_StandardCssTargetsTheGeneratedMarkup(tmp_path: Path, stem: str):

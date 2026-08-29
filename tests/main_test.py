@@ -1,5 +1,6 @@
 """Unit tests for __main__.py."""
 
+import tempfile
 import textwrap
 
 from pathlib import Path
@@ -44,6 +45,34 @@ def _CreateCssFile(tmp_path: Path, content: str = "body { color: red; }\n") -> P
     filename.write_text(content, encoding="utf-8")
 
     return filename
+
+
+# ----------------------------------------------------------------------
+def _CaptureDownloads(
+    monkeypatch: pytest.MonkeyPatch,
+    content: str,
+) -> list[str]:
+    """Prevent content from being downloaded and capture the urls that would have been requested."""
+
+    urls: list[str] = []
+
+    class FakeResponse:
+        def read(self) -> bytes:
+            return content.encode("utf-8")
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args) -> bool:
+            return False
+
+    def FakeUrlopen(url: str, timeout: int) -> FakeResponse:  # noqa: ARG001
+        urls.append(url)
+        return FakeResponse()
+
+    monkeypatch.setattr(main_mod, "urlopen", FakeUrlopen)
+
+    return urls
 
 
 # ----------------------------------------------------------------------
@@ -136,7 +165,7 @@ def test_CssFileMustExist(tmp_path: Path):
 def test_CssFileIsRequired(tmp_path: Path):
     content_filename = _CreateResumeFile(tmp_path)
 
-    result = runner.invoke(app, [str(content_filename), str(tmp_path / "output")])
+    result = runner.invoke(app, [str(content_filename)])
 
     assert result.exit_code == 2, result.output
 
@@ -179,6 +208,40 @@ def test_WithoutPostprocessedChanges(tmp_path: Path):
 
     assert result.exit_code == 0, result.output
     assert "Sam Taylor" in (output_directory / "index.html").read_text(encoding="utf-8")
+
+
+# ----------------------------------------------------------------------
+def test_WithoutOutputDirectory(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    """A temporary directory is populated when an output directory is not provided."""
+
+    content_filename = _CreateResumeFile(tmp_path)
+    css_filename = _CreateCssFile(tmp_path)
+
+    served: list[tuple[Path, str]] = []
+
+    # The temporary directory is removed once the command completes, so the content that it was
+    # populated with is observed while it is served
+    monkeypatch.setattr(
+        main_mod,
+        "ServeImpl",
+        lambda dm, directory, host, port, *, launch_browser: served.append(  # noqa: ARG005
+            (directory, (directory / "index.html").read_text(encoding="utf-8")),
+        ),
+    )
+
+    result = runner.invoke(app, [str(content_filename), str(css_filename), "--serve"])
+
+    assert result.exit_code == 0, result.output
+    assert len(served) == 1
+
+    output_directory, content = served[0]
+
+    assert "Sam Taylor" in content
+    assert output_directory.is_relative_to(Path(tempfile.gettempdir()))
+    assert not output_directory.is_dir()
+
+    # Nothing was written alongside the content that was rendered
+    assert sorted(tmp_path.iterdir()) == sorted([content_filename, css_filename])
 
 
 # ----------------------------------------------------------------------
@@ -294,6 +357,108 @@ def test_LessReplacesAnExistingLink(tmp_path: Path):
         }
         """,
     )
+
+
+# ----------------------------------------------------------------------
+def test_CssUrl(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    content_filename = _CreateResumeFile(tmp_path)
+    output_directory = tmp_path / "output"
+
+    urls = _CaptureDownloads(monkeypatch, "body { color: green; }\n")
+
+    result = runner.invoke(
+        app,
+        [
+            str(content_filename),
+            "https://example.com/themes/styles.css",
+            str(output_directory),
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert urls == ["https://example.com/themes/styles.css"]
+
+    dest_css_filename = output_directory / "styles.css"
+
+    assert 'href="styles.css"' in (output_directory / "index.html").read_text(encoding="utf-8")
+
+    # The downloaded content is written to the output directory itself, so it remains available once
+    # the temporary directory used while generating content is removed
+    assert not dest_css_filename.is_symlink()
+    assert dest_css_filename.read_text(encoding="utf-8") == "body { color: green; }\n"
+
+    # Nothing was written alongside the content that was rendered
+    assert sorted(tmp_path.iterdir()) == sorted([content_filename, output_directory])
+
+
+# ----------------------------------------------------------------------
+def test_LessUrl(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    content_filename = _CreateResumeFile(tmp_path)
+    output_directory = tmp_path / "output"
+
+    urls = _CaptureDownloads(monkeypatch, "@color: red;\nbody { color: @color; }\n")
+
+    result = runner.invoke(
+        app,
+        [str(content_filename), "https://example.com/styles.less", str(output_directory)],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert urls == ["https://example.com/styles.less"]
+
+    assert 'href="styles.css"' in (output_directory / "index.html").read_text(encoding="utf-8")
+
+    # The downloaded less content is compiled to css; only the compiled result is preserved
+    assert sorted(output_directory.iterdir()) == sorted(
+        [output_directory / "index.html", output_directory / "styles.css"],
+    )
+    assert (output_directory / "styles.css").read_text(encoding="utf-8") == textwrap.dedent(
+        """\
+        body {
+          color: red;
+        }
+        """,
+    )
+
+
+# ----------------------------------------------------------------------
+def test_UrlWithQuery(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    """The stylesheet is named after the url's path rather than after everything that follows it."""
+
+    content_filename = _CreateResumeFile(tmp_path)
+    output_directory = tmp_path / "output"
+
+    urls = _CaptureDownloads(monkeypatch, "body { color: green; }\n")
+
+    result = runner.invoke(
+        app,
+        [str(content_filename), "https://example.com/styles.css?raw=true", str(output_directory)],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert urls == ["https://example.com/styles.css?raw=true"]
+    assert (output_directory / "styles.css").read_text(encoding="utf-8") == "body { color: green; }\n"
+
+
+# ----------------------------------------------------------------------
+@pytest.mark.parametrize(
+    "url",
+    ["https://example.com/styles.txt", "https://example.com/themes/", "https://example.com"],
+)
+def test_UrlMustReferenceAStylesheet(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, url: str):
+    content_filename = _CreateResumeFile(tmp_path)
+    output_directory = tmp_path / "output"
+
+    urls = _CaptureDownloads(monkeypatch, "body { color: green; }\n")
+
+    result = runner.invoke(app, [str(content_filename), url, str(output_directory)])
+
+    assert result.exit_code == 2, result.output
+    assert f"'{url}' does not reference a css or less stylesheet." in result.output
+
+    # The content is neither downloaded nor generated when the command line is not valid
+    assert urls == []
+    assert not output_directory.is_dir()
 
 
 # ----------------------------------------------------------------------

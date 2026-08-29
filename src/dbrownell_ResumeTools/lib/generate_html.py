@@ -49,7 +49,7 @@ def GenerateHtml(
 
     The generated markup names what each value is rather than how it is displayed, so every
     presentation decision -- layout, icons, fonts, and the resources that provide them -- belongs to
-    the stylesheet. `samples/standard.less` documents the classes that a stylesheet may target.
+    the stylesheet. `themes/standard.less` documents the classes that a stylesheet may target.
     """
 
     if css_filename is not None and css_filename.name == _OUTPUT_FILENAME:

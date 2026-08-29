@@ -46,28 +46,28 @@ uv run dbrownell_ResumeTools <content_filename> <style_filename> <output_directo
 | `<style_filename>` | A `.css` or `.less` stylesheet; less content is compiled to css. |
 | `<output_directory>` | Directory populated with the generated `index.html` and the stylesheet that it references. |
 
-[Sample content and stylesheets](https://github.com/davidbrownell/dbrownell_ResumeTools/tree/main/src/dbrownell_ResumeTools/samples) are included with the package; this command generates and displays the sample resume when it is run from that directory:
+[Sample content](https://github.com/davidbrownell/dbrownell_ResumeTools/tree/main/src/dbrownell_ResumeTools/samples) and [themes](https://github.com/davidbrownell/dbrownell_ResumeTools/tree/main/src/dbrownell_ResumeTools/themes) are included with the package; this command generates and displays the sample resume when it is run from the directory that contains them:
 
 ```shell
-uv run dbrownell_ResumeTools resume.json standard.less ./output --serve --browser
+uv run dbrownell_ResumeTools samples/resume.json themes/standard.less ./output --serve --browser
 ```
 
 `--serve` serves the generated content over http and `--browser` displays it in a browser, which is served until that browser is closed. Run `uv run dbrownell_ResumeTools --help` for all available options.
 
 #### Creating a pdf
-Print the displayed content to a pdf from the browser itself (`Ctrl+P` / `Cmd+P`, then "Save as PDF"). The bundled stylesheets define `@media print` rules that compact the content for a printed page, so no separate command is involved.
+Print the displayed content to a pdf from the browser itself (`Ctrl+P` / `Cmd+P`, then "Save as PDF"). The bundled stylesheets define `@media print` rules that compact the content for a printed page, so no separate command is involved. The pdf produced by each bundled stylesheet is linked in [the table below](#writing-a-stylesheet).
 
 ### Writing a stylesheet
-The generated html assigns a class to every value that names what the value is: the section that contains it (`work`, `education`, `skills`, ...), its role within that section (`section-header`, `entry`, `entry-body`, `detail`, ...), and the schema field that produced it (`position`, `startDate`, `gpa`, `keyword`, ...). Icons are empty `icon` elements that a stylesheet fills in through `::before`. That contract is documented in full at the top of [standard.less](https://github.com/davidbrownell/dbrownell_ResumeTools/blob/main/src/dbrownell_ResumeTools/samples/standard.less), and a stylesheet is free to lay those classes out however it likes.
+The generated html assigns a class to every value that names what the value is: the section that contains it (`work`, `education`, `skills`, ...), its role within that section (`section-header`, `entry`, `entry-body`, `detail`, ...), and the schema field that produced it (`position`, `startDate`, `gpa`, `keyword`, ...). Icons are empty `icon` elements that a stylesheet fills in through `::before`. That contract is documented in full at the top of [standard.less](https://github.com/davidbrownell/dbrownell_ResumeTools/blob/main/src/dbrownell_ResumeTools/themes/standard.less), and a stylesheet is free to lay those classes out however it likes.
 
 Four stylesheets are bundled to demonstrate the range. All of them are applied to the same `resume.json` and to the same generated html:
 
-| Stylesheet | Presentation |
-| --- | --- |
-| `standard.less` (and the `standard.css` it compiles to) | A single column with a serif display face, a tinted title, and keywords as badges. |
-| `sidebar.less` | Two columns with a dark sidebar, icons on the profiles alone, right-aligned dates, and keywords as a run of text. |
-| `timeline.less` | A full-width banner, dated entries hung off a vertical rail, and keywords as tags. |
-| `minimal.less` | Monochrome and monospaced, set in a nerd font whose glyphs replace the labels that would otherwise introduce a value. |
+| Stylesheet | Presentation | Sample |
+| --- | --- | --- |
+| `standard.less` (and the `standard.css` it compiles to) | A single column with a serif display face, a tinted title, and keywords as badges. | [pdf](https://github.com/davidbrownell/dbrownell_ResumeTools/blob/main/docs/sample_resume_standard.pdf) |
+| `sidebar.less` | Two columns with a dark sidebar, icons on the profiles alone, right-aligned dates, and keywords as a run of text. | [pdf](https://github.com/davidbrownell/dbrownell_ResumeTools/blob/main/docs/sample_resume_sidebar.pdf) |
+| `timeline.less` | A full-width banner, dated entries hung off a vertical rail, and keywords as tags. | [pdf](https://github.com/davidbrownell/dbrownell_ResumeTools/blob/main/docs/sample_resume_timeline.pdf) |
+| `minimal.less` | Monochrome and monospaced, set in a nerd font whose glyphs replace the labels that would otherwise introduce a value. | [pdf](https://github.com/davidbrownell/dbrownell_ResumeTools/blob/main/docs/sample_resume_minimal.pdf) |
 
 <img src="https://raw.githubusercontent.com/davidbrownell/dbrownell_ResumeTools/main/docs/sample_resume_standard.png" alt="Sample resume generated from resume.json and standard.less" width="380" />
 <img src="https://raw.githubusercontent.com/davidbrownell/dbrownell_ResumeTools/main/docs/sample_resume_sidebar.png" alt="Sample resume generated from resume.json and sidebar.less" width="380" />

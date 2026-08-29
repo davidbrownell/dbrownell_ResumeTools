@@ -2,24 +2,77 @@
    inline rather than made inline-block by an id-qualified rule, as such a rule would take precedence
    over the ones Bootstrap defines for `.row` and `.col`. */
 
-@icon-padding-right: 5px;
-@widget-color: darkgray;
-@highlight-color: #007bff;
+// Every color is derived from this one, so changing it themes the entire stylesheet.
+@theme-color: #0f4c81;
+@surface-color: white;
 
+// ----------------------------------------------------------------------
+@theme-hue: hue(@theme-color);
+
+@accent-color: @theme-color;
+@accent-hover-color: lighten(@theme-color, 14%);
+
+// Text takes the hue of the theme at a lightness of its own, so that it remains legible no matter
+// how light or dark the theme color is.
+@text-color: hsl(@theme-hue, 10%, 15%);
+@muted-color: hsl(@theme-hue, 9%, 40%);
+
+// Rules, tints, and shadows are the theme color at the opacity that each of them calls for.
+@rule-color: fade(@theme-color, 18%);
+@shadow-color: fade(@theme-color, 22%);
+@badge-border-color: fade(@theme-color, 35%);
+@badge-background-color: fade(@theme-color, 7%);
+@title-background-color: fade(@theme-color, 9%);
+@page-color: fade(@theme-color, 4%);
+
+@icon-gap: .4em;
+
+// The fallbacks are used when the generated html does not request fonts.
 .special-text-mixin() {
-    font-family: "Merriweather";
+    font-family: "Merriweather", Georgia, "Times New Roman", serif;
     font-variant: small-caps;
+    letter-spacing: .01em;
 }
 
-html, body {
+// The space that separates rows, expressed in terms of a single value so that a printed page can
+// display the same content more compactly without repeating the selectors that position it.
+.row-spacing-mixin(@gap) {
+    &:not(.inline)>.row {
+        &.title {
+            padding-top: @gap * .6;
+            padding-bottom: @gap * .6;
+        }
+
+        &:not(.line_item):not(.title) {
+            margin-top: @gap;
+            padding-top: @gap * .5;
+        }
+
+        // A line item is associated with the header that precedes it, so it is separated from that
+        // header by less space than it is from the line item that precedes it.
+        &.line_item {
+            padding-top: @gap * .25;
+        }
+
+        &.line_item+.row.line_item {
+            padding-top: @gap * .6;
+        }
+    }
+}
+
+html,
+body {
     height: 100%;
     display: grid;
 }
 
 body {
-    font-family: "Open Sans";
+    font-family: "Open Sans", -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     font-size: 1em;
-    padding: 10px;
+    line-height: 1.55;
+    color: @text-color;
+    background-color: @page-color;
+    padding: 1.5rem;
 }
 
 div {
@@ -27,29 +80,53 @@ div {
 }
 
 a {
-    color: @highlight-color;
+    color: @accent-color;
+    text-decoration: none;
+
+    &:hover,
+    &:focus {
+        color: @accent-hover-color;
+        text-decoration: underline;
+    }
 }
 
 #content {
     margin: auto;
     display: block;
+    width: 100%;
+
+    // Text is difficult to scan when a line spans the width of a large display.
+    max-width: 58rem;
+
+    background-color: @surface-color;
+    padding: 2.5rem 3rem;
+    border-radius: 4px;
+    box-shadow: 0 1px 4px @shadow-color;
+
+    // Rendered markdown ends with a paragraph whose margin would otherwise be added to the space
+    // that separates one section from the next.
+    p:last-child {
+        margin-bottom: 0;
+    }
 }
 
 .header {
     .special-text-mixin();
 
     &.section {
-        font-size: 1.5em;
+        font-size: 1.4em;
         font-weight: bold;
+        color: @accent-color;
     }
 
+    // Skills are the exception to this alignment.
     &.subsection {
-        padding-left: 30px;
-        padding-bottom: 10px;
         text-align: center;
+        padding-bottom: .25rem;
 
         div:first-of-type {
-            font-size: 1.2em;
+            font-size: 1.15em;
+            font-weight: bold;
 
             // A header whose only content is that div (a skill name, for example) is not followed
             // by a line break.
@@ -59,16 +136,16 @@ a {
             }
         }
 
+        // The dates are displayed as a single range. The separator is not followed by a space, as
+        // the markup places the dates on separate lines and that line break is displayed as one;
+        // the space that precedes the separator is escaped so that it survives compression.
         .startDate::after {
-            content: " - ";
+            content: "\00a0\2013";
         }
     }
 }
 
 .content {
-    &.section {
-        margin: auto;
-    }
 
     // Rendered markdown content may introduce headings.
     h2 {
@@ -80,17 +157,23 @@ a {
 }
 
 .icon {
-    padding-right: @icon-padding-right;
+    padding-right: @icon-gap;
+    color: @muted-color;
 
-    i {
-        color: @widget-color;
-    }
-
+    // A link that displays an icon is decorated by the icon itself rather than by the color that a
+    // link would otherwise be displayed with.
     a {
-        i:hover {
-            color: @highlight-color;
+        color: inherit;
+
+        &:hover {
+            color: @accent-color;
         }
     }
+}
+
+// An icon that introduces a section is part of that heading.
+.header .icon {
+    color: inherit;
 }
 
 .picture {
@@ -98,100 +181,144 @@ a {
     margin: auto;
 
     img {
-        border: 2px solid black;
-        border-radius: 25%;
-        width: 100px;
+        width: 110px;
+        height: 110px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 1px solid @rule-color;
+        box-shadow: 0 2px 6px @shadow-color;
     }
 }
 
-.picture + .name {
+.picture+.name {
     .special-text-mixin();
 
-    font-size: 4em;
+    font-size: 3em;
     font-weight: bold;
+    line-height: 1.15;
+    color: @accent-color;
     margin: auto;
 }
 
 .container-fluid {
-    .row:not(.line_item) {
-        padding-top: 30px;
-    }
+    .row-spacing-mixin(2rem);
 
-    .row:not(.line_item) + .row.line_item {
-        padding-top: 10px;
+    &:not(.inline)>.row {
+
+        // The title is the only content displayed against a tint, which distinguishes the name and
+        // the picture from everything that follows them.
+        &.title {
+            align-items: center;
+            background-color: @title-background-color;
+            border-bottom: 3px solid @accent-color;
+        }
+
+        &:not(.line_item):not(.title) {
+            border-top: 1px solid @rule-color;
+        }
+
+        // The border displayed by the title takes the place of the one that introduces the section
+        // that follows it.
+        &.title+.row {
+            border-top: none;
+        }
     }
 
     &.inline {
         display: block;
         padding: 0px;
 
-        .row {
-            padding-top: 0px;
-
-            .col {
-                white-space: nowrap;
-            }
+        // Details are sized to their content and wrap when the space available cannot display them
+        // all; equal-width columns clip the values that are longer than their share of the row.
+        .col {
+            flex: 0 0 auto;
+            width: auto;
+            white-space: nowrap;
+            padding-bottom: .25rem;
         }
-    }
-
-    // The title row.
-    &:not(.inline) > .row:first-of-type {
-        margin-top: 0px;
-        padding-top: 10px;
-        padding-bottom: 10px;
-        background-image: linear-gradient(to bottom right, lighten(@widget-color, 20%), darken(@widget-color, 10%));
-        border: 2px solid black;
     }
 }
 
-.position, .studyType {
+.position,
+.studyType {
     .special-text-mixin();
 
-    font-size: 1.2em;
+    font-size: 1.15em;
     font-weight: bold;
 }
 
+.area {
+    color: @muted-color;
+}
+
 .location {
+    // The values are displayed as flex items so that the line breaks between them in the markup are
+    // not displayed as spaces that would precede the separator.
+    display: inline-flex;
+
     // The separator precedes the value rather than follows it, as the region and country code are
-    // omitted when they are not available; the city is always displayed.
-    .region, .countryCode {
+    // omitted when they are not available; the city is always displayed. The space is escaped so
+    // that it survives compression.
+    .region,
+    .countryCode {
         &::before {
-            content: ", ";
+            content: ",\00a0";
         }
     }
 }
 
-.skill {
-    &.line_item {
-        .header {
-            text-align: left;
+.skill.line_item {
+    // A skill is a single word or phrase rather than a sentence, so everything within one is
+    // displayed at a smaller size than the rest of the content. The sizes that a name and a badge
+    // are otherwise displayed at are replaced by this one.
+    font-size: .82em;
+
+    // A skill name is displayed on one line whenever it can be, so it is given more room than the
+    // headers that introduce several values.
+    .header.subsection {
+        flex: 0 0 33.33%;
+        max-width: 33.33%;
+        text-align: left;
+
+        div:first-of-type {
+            font-size: 1em;
         }
+    }
 
-        .content {
-            text-align: center;
+    .content {
+        text-align: center;
+    }
 
-            .item {
-                padding-right: @icon-padding-right;
+    // Badges that wrap are separated by the line height rather than by a margin, which would not be
+    // applied consistently to the last line.
+    .keywords {
+        line-height: 2.2;
+    }
 
-                .badge-primary {
-                    font-size: 1em;
-                    margin-bottom: 1em;
-                    border-radius: 5px;
+    .item {
+        padding-right: @icon-gap;
 
-                    &.link {
-                        background-color: @widget-color;
+        .badge-primary {
+            font-size: 1em;
+            font-weight: 600;
+            padding: .45em .9em;
 
-                        &:hover {
-                            background-color: @highlight-color;
-                        }
-                    }
+            // Bootstrap displays the badge as a pill.
+            border-radius: 3px;
 
-                    &.nolink {
-                        border-style: solid;
-                        background: none;
-                        color: @widget-color;
-                    }
+            &.link {
+                background-color: @accent-color;
+
+                &:hover {
+                    background-color: @accent-hover-color;
+                    text-decoration: none;
                 }
+            }
+
+            &.nolink {
+                border: 1px solid @badge-border-color;
+                background-color: @badge-background-color;
+                color: @accent-color;
             }
         }
     }
@@ -206,17 +333,115 @@ a {
     }
 }
 
-.startDate, .endDate {
-    font-size: .9em;
+.startDate,
+.endDate {
+    font-size: .85em;
+    font-weight: normal;
+    color: @muted-color;
+    letter-spacing: .02em;
+}
+
+// Bootstrap's column widths are not associated with a breakpoint, so a header column remains narrow
+// no matter how little space is available; the header and its content are stacked instead. The
+// query is restricted to a screen, as a printed page is narrower than this width yet has room to
+// display the columns side by side.
+@media screen and (max-width: 767.98px) {
+    body {
+        padding: .75rem;
+    }
+
+    #content {
+        padding: 1.5rem;
+    }
+
+    // The skill header is listed as well, as the width that it is displayed with is not the one that
+    // its column would otherwise provide.
+    .row .col-3,
+    .row .col-5,
+    .row .col-6,
+    .skill.line_item .header.subsection {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    .header.subsection {
+        text-align: left;
+    }
+
+    .picture+.name {
+        font-size: 2.25em;
+        text-align: center;
+    }
+
+    .container-fluid.inline .col {
+        white-space: normal;
+        overflow-wrap: break-word;
+    }
 }
 
 @media print {
-    .skill.line_item {
-        font-size: .85em !important;
 
-        .keywords .item a {
-            text-decoration: none !important;
-            color: @highlight-color !important;
+    // Bootstrap prints A3 paper by default. The size is restored to the one that the browser was
+    // asked to print, and the margins are declared here so that the result does not depend on the
+    // settings that the browser was invoked with.
+    @page {
+        size: auto;
+        margin: .6in;
+    }
+
+    // The content is printed as a single flow; the grid that centers it within the viewport on a
+    // screen does not fragment across pages.
+    html,
+    body {
+        display: block;
+        height: auto;
+    }
+
+    body {
+        // Bootstrap prints the content at a width that no page can display, which the browser then
+        // scales to fit; everything is displayed at ~75% of the size that was asked for as a result.
+        min-width: 0px !important;
+
+        // Printed content is read at a closer distance than content on a screen, and a resume that
+        // fits on a single page is preferred.
+        font-size: .8em;
+        padding: 0px;
+        background-color: @surface-color;
+    }
+
+    // Bootstrap underlines every link when printing, which is noise on a page that cannot be
+    // followed.
+    #content a {
+        text-decoration: none;
+    }
+
+    #content {
+        max-width: none;
+        padding: 0px;
+        box-shadow: none;
+
+        // A browser omits background colors when printing unless it is asked not to adjust them;
+        // without this, the tint that distinguishes the title is printed only when the person
+        // printing has enabled background graphics.
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    // Vertical space is the resource that determines how many pages are printed.
+    .container-fluid {
+        .row-spacing-mixin(1.1rem);
+    }
+
+    // A filled badge consumes a large amount of ink.
+    .skill.line_item {
+        .item .badge-primary {
+
+            &.link,
+            &.nolink {
+                background-color: transparent;
+                border: 1px solid @badge-border-color;
+                color: @accent-color;
+            }
         }
     }
 }

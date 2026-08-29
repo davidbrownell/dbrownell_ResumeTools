@@ -37,8 +37,7 @@ from dbrownell_ResumeTools.lib.json_resume_schema import (
 # The samples are located within the package itself rather than within `lib`
 SAMPLES_DIR = Path(json_resume_schema.__file__).parent.parent / "samples"
 
-STANDARD_CSS_FILENAME = SAMPLES_DIR / "standard.css"
-STANDARD_LESS_FILENAME = SAMPLES_DIR / "standard.less"
+ALL_STYLESHEET_STEMS = ["standard", "sidebar", "timeline", "minimal"]
 
 FULL_SAMPLE_STEMS = ["resume"]
 MINIMAL_SAMPLE_STEMS = ["resume_minimal"]
@@ -118,10 +117,27 @@ def _AllFields() -> set[tuple[str, str]]:
 
 
 # ----------------------------------------------------------------------
+def _CompiledStylesheet(stem: str) -> str:
+    """Return the css that a bundled less stylesheet compiles to."""
+
+    filename = SAMPLES_DIR / f"{stem}.less"
+
+    return Lessish().compile(
+        filename.read_text(encoding="utf-8"),
+        filename=str(filename),
+        compress=True,
+    )
+
+
+# ----------------------------------------------------------------------
 def _StylesheetIdentifiers(content: str) -> set[str]:
     """Return the ids and classes targeted by the stylesheet provided."""
 
     content = re.sub(r"/\*.*?\*/", " ", content, flags=re.DOTALL)
+
+    # An at-rule that is a statement rather than a block ('@import', for example) is not a selector,
+    # yet the uri that it references resembles one.
+    content = re.sub(r"@[\w-]+[^;{}]*;", " ", content)
 
     # Declaration blocks are the only blocks that do not themselves contain a block, so removing them
     # leaves the selectors (including those within an at-rule) and nothing that resembles one.
@@ -234,25 +250,24 @@ def test_FullSampleDemonstratesOptionalOmissions(stem: str):
 # |
 # ----------------------------------------------------------------------
 def test_StandardCssIsCompiledFromStandardLess():
-    """The bundled stylesheets are the same content expressed in two forms.
+    """The bundled css stylesheet is `standard.less` expressed in another form.
 
     The less content is the one that is maintained; without this, an edit to it would not reach the
     css content and the two would silently drift apart.
     """
 
-    assert STANDARD_CSS_FILENAME.read_text(encoding="utf-8") == Lessish().compile(
-        STANDARD_LESS_FILENAME.read_text(encoding="utf-8"),
-        filename=str(STANDARD_LESS_FILENAME),
-        compress=True,
-    )
+    assert (SAMPLES_DIR / "standard.css").read_text(encoding="utf-8") == _CompiledStylesheet("standard")
 
 
 # ----------------------------------------------------------------------
+@pytest.mark.parametrize("stylesheet_stem", ALL_STYLESHEET_STEMS)
 @pytest.mark.parametrize("stem", FULL_SAMPLE_STEMS)
-def test_StandardCssTargetsTheGeneratedMarkup(tmp_path: Path, stem: str):
-    """Nothing that the bundled stylesheet targets is absent from the generated markup.
+def test_CssTargetsTheGeneratedMarkup(tmp_path: Path, stem: str, stylesheet_stem: str):
+    """Nothing that a bundled stylesheet targets is absent from the generated markup.
 
-    Without this, a selector may be renamed on one side of the pair and silently style nothing.
+    The generated markup names what each value is rather than how it is displayed, so this is the
+    contract that a stylesheet is written against; without this, a selector may be renamed on one
+    side of that contract and silently style nothing.
     """
 
     output_directory = tmp_path / "output"
@@ -260,16 +275,9 @@ def test_StandardCssTargetsTheGeneratedMarkup(tmp_path: Path, stem: str):
     sink = io.StringIO()
 
     with DoneManager.Create(sink, "Testing...") as dm:
-        GenerateHtml(
-            dm,
-            SAMPLES_DIR / f"{stem}{ALL_SAMPLE_SUFFIXES[0]}",
-            output_directory,
-            STANDARD_CSS_FILENAME,
-        )
+        GenerateHtml(dm, SAMPLES_DIR / f"{stem}{ALL_SAMPLE_SUFFIXES[0]}", output_directory, None)
 
-    stylesheet_identifiers = _StylesheetIdentifiers(
-        STANDARD_CSS_FILENAME.read_text(encoding="utf-8"),
-    )
+    stylesheet_identifiers = _StylesheetIdentifiers(_CompiledStylesheet(stylesheet_stem))
 
     assert stylesheet_identifiers
 

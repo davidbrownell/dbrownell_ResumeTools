@@ -1,0 +1,383 @@
+/* A fourth presentation of the markup that `standard.less` also styles.
+
+   Nothing here is coordinated with the generator: the same html produces a monochrome resume set
+   entirely in a monospaced face, with the glyphs of a nerd font in place of the labels that would
+   otherwise introduce a value and no fill, tint, or shadow anywhere. The class contract that these
+   stylesheets target is documented at the top of `standard.less`. */
+
+@import url("https://fonts.googleapis.com/css?family=JetBrains+Mono:400,700&display=swap");
+
+// The symbols-only nerd font provides the glyphs alone; the text is set in the monospaced face that
+// the glyphs are patched into elsewhere, which is what that font is published for. The version is
+// pinned so that the glyph at a given codepoint is the one that this stylesheet was written against.
+@font-face {
+    font-family: "Symbols Nerd Font";
+    src: url("https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFont-Regular.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+}
+
+@text-color: #111111;
+@muted-color: #666666;
+@rule-color: #cccccc;
+@surface-color: white;
+
+@icon-width: 1.6em;
+
+// A glyph is content that this stylesheet provides rather than markup that the generator produces.
+.icon-mixin(@glyph) {
+    &::before {
+        content: @glyph;
+        font-family: "Symbols Nerd Font", monospace;
+    }
+}
+
+// The space that separates sections and entries, expressed once so that a printed page can display
+// the same content more compactly without repeating the selectors that position it.
+.spacing-mixin(@gap) {
+    .section {
+        margin-top: @gap;
+    }
+
+    .entry+.entry {
+        margin-top: @gap * .6;
+    }
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    font-size: .8em;
+    line-height: 1.55;
+    color: @text-color;
+    background-color: @surface-color;
+    padding: 2rem 1.25rem;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+ul {
+    margin: 0;
+    padding-left: 1.4em;
+}
+
+#resume {
+    // A monospaced face is read comfortably over fewer characters than a proportional one is.
+    max-width: 46rem;
+    margin: auto;
+
+    // Rendered markdown begins and ends with a paragraph whose margins would otherwise be added to
+    // the space that separates one value from the next.
+    p:first-child {
+        margin-top: 0;
+    }
+
+    p:last-child {
+        margin-bottom: 0;
+    }
+}
+
+.spacing-mixin(1.5rem);
+
+// ----------------------------------------------------------------------
+// |  Basics
+// ----------------------------------------------------------------------
+
+// A picture is the one value that a monochrome, text-only presentation has nothing to display it
+// as, so it is not displayed at all.
+.picture {
+    display: none;
+}
+
+.basics {
+    margin-top: 0;
+
+    .name {
+        font-size: 1.9em;
+        font-weight: 700;
+        line-height: 1.2;
+        letter-spacing: -.02em;
+    }
+
+    .label {
+        color: @muted-color;
+    }
+}
+
+// ----------------------------------------------------------------------
+// |  Headings
+// ----------------------------------------------------------------------
+
+// The contact and profile details are identified by their glyphs, so the headings that introduce
+// them are not displayed; those details qualify the name rather than following it as a section of
+// their own.
+.contact,
+.profiles {
+    margin-top: 0;
+
+    .section-header {
+        display: none;
+    }
+}
+
+.section-header {
+    display: flex;
+    align-items: baseline;
+    border-bottom: 1px dashed @rule-color;
+    padding-bottom: .2rem;
+    margin-bottom: .5rem;
+}
+
+.heading {
+    text-transform: uppercase;
+    letter-spacing: .18em;
+    font-weight: 700;
+}
+
+// ----------------------------------------------------------------------
+// |  Details
+// ----------------------------------------------------------------------
+
+// A detail is displayed on a line of its own, with its glyph occupying a column of a fixed width so
+// that the values that follow the glyphs align with one another.
+.detail {
+    display: flex;
+    align-items: baseline;
+    overflow-wrap: anywhere;
+}
+
+.languages .detail {
+    display: inline-flex;
+    margin-right: 2ch;
+}
+
+// The column is separated from the value that follows it rather than sized to contain the glyph, as
+// a glyph that is wider than the column would otherwise touch that value.
+.icon {
+    flex: 0 0 @icon-width;
+    padding-right: .8ch;
+    color: @muted-color;
+}
+
+// The values within these details are displayed as flex items so that the line breaks between them
+// in the markup are not displayed as spaces that would precede the separator.
+.location .value,
+.language .value {
+    display: inline-flex;
+}
+
+// The separator precedes the value rather than follows it, as the region and country code are
+// omitted when they are not available; the city is always displayed.
+.location .region::before,
+.location .countryCode::before {
+    content: ",\00a0";
+}
+
+.fluency {
+    color: @muted-color;
+
+    &::before {
+        content: "\00a0\2014\00a0";
+    }
+}
+
+// ----------------------------------------------------------------------
+// |  Entries
+// ----------------------------------------------------------------------
+
+// The value that names the entry takes the space that the dates do not, which aligns the dates to
+// the right of the entry that they qualify.
+.entry-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+
+    >:first-child {
+        flex: 1 1 auto;
+        font-weight: 700;
+    }
+}
+
+.startDate,
+.endDate,
+.date,
+.releaseDate {
+    flex: 0 0 auto;
+    color: @muted-color;
+}
+
+// The dates are displayed as a single range rather than as two values that are separated from one
+// another. The spaces are escaped so that they survive compression.
+.startDate::after {
+    content: "\00a0\2013\00a0";
+}
+
+// The value that names an entry within a section, whatever the schema calls it. Nothing here is
+// distinguished by color, so it is distinguished by the emphasis of the face instead.
+.position,
+.studyType,
+.awards .title,
+.publications .name {
+    font-style: italic;
+}
+
+.area,
+.courses,
+.gpa {
+    color: @muted-color;
+}
+
+.gpa::before {
+    content: "GPA\00a0";
+}
+
+.references .reference {
+    color: @muted-color;
+}
+
+// ----------------------------------------------------------------------
+// |  Skills and Interests
+// ----------------------------------------------------------------------
+
+// A keyword is bracketed rather than boxed, which is the emphasis available to a presentation that
+// draws nothing.
+.keywords {
+    list-style: none;
+    padding: 0;
+}
+
+.keyword {
+    display: inline-block;
+    color: @muted-color;
+    margin-right: 1ch;
+
+    &::before {
+        content: "[";
+    }
+
+    &::after {
+        content: "]";
+    }
+}
+
+// ----------------------------------------------------------------------
+// |  Glyphs
+// ----------------------------------------------------------------------
+.contact .section-header .icon {
+    .icon-mixin("\f2b9");
+}
+
+.profiles .section-header .icon {
+    .icon-mixin("\f2c0");
+}
+
+.about .section-header .icon {
+    .icon-mixin("\f007");
+}
+
+.skills .section-header .icon {
+    .icon-mixin("\f121");
+}
+
+.work .section-header .icon {
+    .icon-mixin("\f0b1");
+}
+
+.education .section-header .icon {
+    .icon-mixin("\f19d");
+}
+
+.volunteer .section-header .icon {
+    .icon-mixin("\f004");
+}
+
+.awards .section-header .icon {
+    .icon-mixin("\f091");
+}
+
+.publications .section-header .icon {
+    .icon-mixin("\f02d");
+}
+
+.languages .section-header .icon {
+    .icon-mixin("\f1ab");
+}
+
+.interests .section-header .icon {
+    .icon-mixin("\f005");
+}
+
+.references .section-header .icon {
+    .icon-mixin("\f10d");
+}
+
+.email .icon {
+    .icon-mixin("\f0e0");
+}
+
+.website .icon {
+    .icon-mixin("\f0c1");
+}
+
+.phone .icon {
+    .icon-mixin("\f095");
+}
+
+.location .icon {
+    .icon-mixin("\f041");
+}
+
+// A profile is decorated when this stylesheet recognizes the network; one that it does not
+// recognize is displayed without a glyph rather than being omitted.
+.profile.github .icon {
+    .icon-mixin("\f09b");
+}
+
+.profile.linkedin .icon {
+    .icon-mixin("\f08c");
+}
+
+.profile.codestats .icon {
+    .icon-mixin("\f200");
+}
+
+// ----------------------------------------------------------------------
+// |  Print
+// ----------------------------------------------------------------------
+@media print {
+    @page {
+        size: auto;
+        margin: .6in;
+    }
+
+    body {
+        font-size: .68em;
+        padding: 0;
+    }
+
+    #resume {
+        max-width: none;
+    }
+
+    // A heading is not worth printing at the bottom of a page. Entries are allowed to break, as
+    // keeping one whole costs the remainder of the page that it would not fit on -- and vertical
+    // space is the resource that determines how many pages are printed.
+    .section-header {
+        break-after: avoid;
+    }
+
+    // Vertical space is the resource that determines how many pages are printed.
+    .spacing-mixin(1rem);
+}

@@ -1,6 +1,23 @@
-/* Every selector corresponds to the markup produced by lib/generate_html.py. Nested divs are left
-   inline rather than made inline-block by an id-qualified rule, as such a rule would take precedence
-   over the ones Bootstrap defines for `.row` and `.col`. */
+/* Every selector corresponds to the class contract produced by lib/generate_html.py:
+
+     #resume                     The document.
+     .section.<name>             A section; <name> is the schema value that it displays (basics,
+                                 contact, profiles, about, skills, work, education, volunteer,
+                                 awards, publications, languages, interests, references).
+     .section-header             The heading that introduces a section: .icon and .heading.
+     .section-body               Everything that a section displays: .entry or .detail children.
+     .entry                      One item within a section: .entry-header and .entry-body.
+     .detail                     One short value within a section: .icon and .value.
+     .icon                       An empty element; this stylesheet decides which icon it displays.
+
+   Everything else names the schema value that it displays (.position, .startDate, .gpa, .keyword,
+   and so on), so a stylesheet decides the entire presentation without the generator being involved.
+
+   The generated markup references no stylesheet other than this one, so the resources that this
+   presentation depends on are requested here. */
+
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css");
+@import url("https://fonts.googleapis.com/css?family=Open+Sans:400,300,600|Merriweather:400,700&display=swap");
 
 // Every color is derived from this one, so changing it themes the entire stylesheet.
 @theme-color: #0f4c81;
@@ -22,41 +39,65 @@
 @shadow-color: fade(@theme-color, 22%);
 @badge-border-color: fade(@theme-color, 35%);
 @badge-background-color: fade(@theme-color, 7%);
-@title-background-color: fade(@theme-color, 9%);
+@basics-background-color: fade(@theme-color, 9%);
 @page-color: fade(@theme-color, 4%);
 
 @icon-gap: .4em;
+@column-gap: 1.5rem;
 
-// The fallbacks are used when the generated html does not request fonts.
+// The width of the column that names an entry; the remainder displays what it contains.
+@label-width: 12rem;
+
+// The fallbacks are used when the imported fonts are not available.
 .special-text-mixin() {
     font-family: "Merriweather", Georgia, "Times New Roman", serif;
     font-variant: small-caps;
     letter-spacing: .01em;
 }
 
-// The space that separates rows, expressed in terms of a single value so that a printed page can
-// display the same content more compactly without repeating the selectors that position it.
-.row-spacing-mixin(@gap) {
-    &:not(.inline)>.row {
-        &.title {
-            padding-top: @gap * .6;
-            padding-bottom: @gap * .6;
-        }
+// An icon is content that this stylesheet provides rather than markup that the generator produces,
+// so a presentation that displays different icons -- or none at all -- changes nothing but these
+// declarations.
+.solid-icon-mixin(@glyph) {
+    &::before {
+        content: @glyph;
+        font-family: "Font Awesome 6 Free";
+        font-weight: 900;
+        padding-right: @icon-gap;
+    }
+}
 
-        &:not(.line_item):not(.title) {
-            margin-top: @gap;
-            padding-top: @gap * .5;
-        }
+.brand-icon-mixin(@glyph) {
+    &::before {
+        content: @glyph;
+        font-family: "Font Awesome 6 Brands";
+        font-weight: 400;
+        padding-right: @icon-gap;
+    }
+}
 
-        // A line item is associated with the header that precedes it, so it is separated from that
-        // header by less space than it is from the line item that precedes it.
-        &.line_item {
-            padding-top: @gap * .25;
-        }
+// The space that separates sections and entries, expressed in terms of a single value so that a
+// printed page can display the same content more compactly without repeating the selectors that
+// position it.
+.spacing-mixin(@gap) {
+    .section {
+        margin-top: @gap;
+        padding-top: @gap * .5;
+    }
 
-        &.line_item+.row.line_item {
-            padding-top: @gap * .6;
-        }
+    .section.basics {
+        margin-top: 0;
+        padding: @gap * .6 0;
+    }
+
+    // An entry is associated with the heading that precedes it, so it is separated from that
+    // heading by less space than it is from the entry that precedes it.
+    .entry {
+        padding-top: @gap * .25;
+    }
+
+    .entry+.entry {
+        padding-top: @gap * .6;
     }
 }
 
@@ -75,10 +116,6 @@ body {
     padding: 1.5rem;
 }
 
-div {
-    display: inline;
-}
-
 a {
     color: @accent-color;
     text-decoration: none;
@@ -91,15 +128,14 @@ a {
 }
 
 // Lists are introduced by the content itself (highlights and courses) and by rendered markdown.
-// Bootstrap indents them by more than the space that this layout has to give.
 ul {
     padding-left: 1.25em;
     margin-bottom: 0;
+    margin-top: 0;
 }
 
-#content {
+#resume {
     margin: auto;
-    display: block;
     width: 100%;
 
     // Text is difficult to scan when a line spans the width of a large display.
@@ -110,156 +146,142 @@ ul {
     border-radius: 4px;
     box-shadow: 0 1px 4px @shadow-color;
 
-    // Rendered markdown ends with a paragraph whose margin would otherwise be added to the space
-    // that separates one section from the next.
+    // Rendered markdown begins and ends with a paragraph whose margins would otherwise be added to
+    // the space that separates one value from the next.
+    p:first-child {
+        margin-top: 0;
+    }
+
     p:last-child {
         margin-bottom: 0;
     }
 }
 
-.header {
+.spacing-mixin(2rem);
+
+// ----------------------------------------------------------------------
+// |  Layout
+// ----------------------------------------------------------------------
+
+// A section that displays values directly places its heading beside them.
+.section {
+    display: grid;
+    grid-template-columns: @label-width 1fr;
+    column-gap: @column-gap;
+    border-top: 1px solid @rule-color;
+}
+
+// A section composed of entries introduces them with a heading of its own; each entry provides the
+// column that the heading would otherwise occupy.
+.section:has(.entry) {
+    display: block;
+}
+
+.entry {
+    display: grid;
+    grid-template-columns: @label-width 1fr;
+    column-gap: @column-gap;
+}
+
+// The basics are the only content displayed against a tint, which distinguishes the name and the
+// picture from everything that follows them.
+.section.basics {
+    align-items: center;
+    background-color: @basics-background-color;
+    border-top: none;
+    border-bottom: 3px solid @accent-color;
+
+    .picture {
+        grid-row: 1 / span 2;
+        text-align: center;
+
+        img {
+            width: 110px;
+            height: 110px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 1px solid @rule-color;
+            box-shadow: 0 2px 6px @shadow-color;
+        }
+    }
+
+    .name,
+    .label {
+        grid-column: 2;
+    }
+}
+
+// The border displayed by the basics section takes the place of the one that introduces the section
+// that follows it.
+.section.basics+.section {
+    border-top: none;
+}
+
+// Details are sized to their content and wrap when the space available cannot display them all.
+.detail {
+    display: inline-flex;
+    align-items: baseline;
+    white-space: nowrap;
+    margin-right: @column-gap;
+    padding-bottom: .25rem;
+}
+
+// ----------------------------------------------------------------------
+// |  Text
+// ----------------------------------------------------------------------
+.section-header {
     .special-text-mixin();
 
-    &.section {
-        font-size: 1.4em;
+    font-size: 1.4em;
+    font-weight: bold;
+    color: @accent-color;
+}
+
+.entry-header {
+    .special-text-mixin();
+
+    text-align: center;
+    padding-bottom: .25rem;
+
+    // The value that names the entry, whatever the schema calls it.
+    >:first-child {
+        font-size: 1.15em;
         font-weight: bold;
+    }
+}
+
+// Rendered markdown content may introduce headings.
+.section-body h2 {
+    .special-text-mixin();
+
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+.basics {
+    .name {
+        .special-text-mixin();
+
+        font-size: 3em;
+        font-weight: bold;
+        line-height: 1.15;
         color: @accent-color;
     }
 
-    // Keyword lists are the exception to this alignment.
-    &.subsection {
-        text-align: center;
-        padding-bottom: .25rem;
-
-        div:first-of-type {
-            font-size: 1.15em;
-            font-weight: bold;
-
-            // A header whose only content is that div (a skill name, for example) is not followed
-            // by a line break.
-            &:not(:last-of-type)::after {
-                content: "\A";
-                white-space: pre;
-            }
-        }
-
-        // The dates are displayed as a single range. The separator is not followed by a space, as
-        // the markup places the dates on separate lines and that line break is displayed as one;
-        // the space that precedes the separator is escaped so that it survives compression.
-        .startDate::after {
-            content: "\00a0\2013";
-        }
-    }
-}
-
-.content {
-
-    // Rendered markdown content may introduce headings.
-    h2 {
+    // The label qualifies the name that precedes it, so it is displayed in the same face at a size
+    // of its own.
+    .label {
         .special-text-mixin();
 
-        font-size: 1.5em;
-        font-weight: bold;
-    }
-}
-
-.icon {
-    padding-right: @icon-gap;
-    color: @muted-color;
-
-    // A link that displays an icon is decorated by the icon itself rather than by the color that a
-    // link would otherwise be displayed with.
-    a {
-        color: inherit;
-
-        &:hover {
-            color: @accent-color;
-        }
-    }
-}
-
-// An icon that introduces a section is part of that heading.
-.header .icon {
-    color: inherit;
-}
-
-.picture {
-    text-align: center;
-    margin: auto;
-
-    img {
-        width: 110px;
-        height: 110px;
-        object-fit: cover;
-        border-radius: 50%;
-        border: 1px solid @rule-color;
-        box-shadow: 0 2px 6px @shadow-color;
-    }
-}
-
-.picture+.name {
-    .special-text-mixin();
-
-    font-size: 3em;
-    font-weight: bold;
-    line-height: 1.15;
-    color: @accent-color;
-    margin: auto;
-
-    // The label is displayed beneath the name, whose size it does not share; its own size is
-    // expressed relative to that one.
-    .label {
-        display: block;
-        font-size: .32em;
-        font-weight: normal;
         color: @muted-color;
-    }
-}
-
-.container-fluid {
-    .row-spacing-mixin(2rem);
-
-    &:not(.inline)>.row {
-
-        // The title is the only content displayed against a tint, which distinguishes the name and
-        // the picture from everything that follows them.
-        &.title {
-            align-items: center;
-            background-color: @title-background-color;
-            border-bottom: 3px solid @accent-color;
-        }
-
-        &:not(.line_item):not(.title) {
-            border-top: 1px solid @rule-color;
-        }
-
-        // The border displayed by the title takes the place of the one that introduces the section
-        // that follows it.
-        &.title+.row {
-            border-top: none;
-        }
-    }
-
-    &.inline {
-        display: block;
-        padding: 0px;
-
-        // Details are sized to their content and wrap when the space available cannot display them
-        // all; equal-width columns clip the values that are longer than their share of the row.
-        .col {
-            flex: 0 0 auto;
-            width: auto;
-            white-space: nowrap;
-            padding-bottom: .25rem;
-        }
     }
 }
 
 // The value that names an entry within a section, whatever the schema calls it.
 .position,
 .studyType,
-.award .title,
-.publication .name {
+.awards .title,
+.publications .name {
     .special-text-mixin();
 
     font-size: 1.15em;
@@ -283,7 +305,6 @@ ul {
 }
 
 .gpa {
-    display: block;
     font-size: .85em;
     color: @muted-color;
 
@@ -295,30 +316,49 @@ ul {
 }
 
 // A reference is a quotation.
-.reference .content {
+.references .reference {
     font-style: italic;
 }
 
-.location {
-    // The values are displayed as flex items so that the line breaks between them in the markup are
-    // not displayed as spaces that would precede the separator.
-    display: inline-flex;
+.startDate,
+.endDate,
+.date,
+.releaseDate {
+    // The dates qualify the value that names the entry, so they are displayed beneath it on a
+    // single line of their own rather than on lines of their own.
+    display: inline;
 
-    // The separator precedes the value rather than follows it, as the region and country code are
-    // omitted when they are not available; the city is always displayed. The space is escaped so
-    // that it survives compression.
+    font-size: .85em;
+    font-weight: normal;
+    color: @muted-color;
+    letter-spacing: .02em;
+}
+
+// The dates are displayed as a single range. The separator is not followed by a space, as the
+// markup places the dates on separate lines and that line break is displayed as one; the space that
+// precedes the separator is escaped so that it survives compression.
+.startDate::after {
+    content: "\00a0\2013";
+}
+
+// The values within these details are displayed as flex items so that the line breaks between them
+// in the markup are not displayed as spaces that would precede the separator.
+.location .value,
+.language .value {
+    display: inline-flex;
+}
+
+// The separator precedes the value rather than follows it, as the region and country code are
+// omitted when they are not available; the city is always displayed. The space is escaped so that
+// it survives compression.
+.location {
+
     .region,
     .countryCode {
         &::before {
             content: ",\00a0";
         }
     }
-}
-
-.languages .detail {
-    // The values are displayed as flex items so that the line break between them in the markup is
-    // not displayed as a space that would precede the separator.
-    display: flex;
 }
 
 .fluency {
@@ -335,131 +375,216 @@ ul {
     }
 }
 
-// Skills and interests.
-.keyword_list.line_item {
-    // A keyword is a single word or phrase rather than a sentence, so everything within one is
-    // displayed at a smaller size than the rest of the content. The sizes that a name and a badge
-    // are otherwise displayed at are replaced by this one.
-    font-size: .82em;
+// ----------------------------------------------------------------------
+// |  Skills and Interests
+// ----------------------------------------------------------------------
+.skills,
+.interests {
 
-    // A name is displayed on one line whenever it can be, so it is given more room than the
-    // headers that introduce several values.
-    .header.subsection {
-        flex: 0 0 33.33%;
-        max-width: 33.33%;
+    // A keyword is a single word or phrase rather than a sentence, so everything within one is
+    // displayed at a smaller size than the rest of the content.
+    .entry {
+        font-size: .82em;
+
+        // A name is displayed on one line whenever it can be, so it is given more room than the
+        // headers that introduce several values.
+        grid-template-columns: 33.33% 1fr;
+    }
+
+    .entry-header {
         text-align: left;
 
-        div:first-of-type {
+        >:first-child {
             font-size: 1em;
         }
     }
 
-    .content {
+    .entry-body {
         text-align: center;
     }
+}
 
-    // Badges that wrap are separated by the line height rather than by a margin, which would not be
-    // applied consistently to the last line.
-    .keywords {
-        line-height: 2.2;
-    }
+.keywords {
+    list-style: none;
+    padding-left: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: @icon-gap;
+}
 
-    .item {
-        padding-right: @icon-gap;
+.keyword {
+    font-weight: 600;
+    padding: .45em .9em;
+    border-radius: 3px;
+    border: 1px solid @badge-border-color;
+    background-color: @badge-background-color;
+    color: @accent-color;
 
-        .badge-primary {
-            font-size: 1em;
-            font-weight: 600;
-            padding: .45em .9em;
+    // A keyword that links somewhere is filled rather than outlined, which distinguishes it from
+    // one that is displayed as text; the markup does not say which it is.
+    &:has(a) {
+        border-color: transparent;
+        background-color: @accent-color;
 
-            // Bootstrap displays the badge as a pill.
-            border-radius: 3px;
+        a {
+            color: @surface-color;
+        }
 
-            &.link {
-                background-color: @accent-color;
+        &:hover {
+            background-color: @accent-hover-color;
 
-                &:hover {
-                    background-color: @accent-hover-color;
-                    text-decoration: none;
-                }
-            }
-
-            &.nolink {
-                border: 1px solid @badge-border-color;
-                background-color: @badge-background-color;
-                color: @accent-color;
+            a {
+                text-decoration: none;
             }
         }
     }
 }
 
-.education {
-    .studyType {
-        &::after {
-            content: "\A";
-            white-space: pre;
-        }
-    }
-}
-
-.startDate,
-.endDate,
-.date,
-.releaseDate {
-    font-size: .85em;
-    font-weight: normal;
+// ----------------------------------------------------------------------
+// |  Icons
+// ----------------------------------------------------------------------
+.icon {
     color: @muted-color;
-    letter-spacing: .02em;
 }
 
-// Bootstrap's column widths are not associated with a breakpoint, so a header column remains narrow
-// no matter how little space is available; the header and its content are stacked instead. The
-// query is restricted to a screen, as a printed page is narrower than this width yet has room to
-// display the columns side by side.
+// An icon that introduces a section is part of that heading.
+.section-header .icon {
+    color: inherit;
+}
+
+.contact .section-header .icon {
+    .solid-icon-mixin("\f2b9");
+}
+
+.profiles .section-header .icon {
+    .solid-icon-mixin("\23");
+}
+
+.about .section-header .icon {
+    .solid-icon-mixin("\f007");
+}
+
+.skills .section-header .icon {
+    .solid-icon-mixin("\f121");
+}
+
+.work .section-header .icon {
+    .solid-icon-mixin("\f14b");
+}
+
+.education .section-header .icon {
+    .solid-icon-mixin("\f19d");
+}
+
+.volunteer .section-header .icon {
+    .solid-icon-mixin("\f4c4");
+}
+
+.awards .section-header .icon {
+    .solid-icon-mixin("\f091");
+}
+
+.publications .section-header .icon {
+    .solid-icon-mixin("\f02d");
+}
+
+.languages .section-header .icon {
+    .solid-icon-mixin("\f1ab");
+}
+
+.interests .section-header .icon {
+    .solid-icon-mixin("\f004");
+}
+
+.references .section-header .icon {
+    .solid-icon-mixin("\f10d");
+}
+
+.email .icon {
+    .solid-icon-mixin("\f0e0");
+}
+
+.website .icon {
+    .solid-icon-mixin("\f0c1");
+}
+
+.phone .icon {
+    .solid-icon-mixin("\f095");
+}
+
+.location .icon {
+    .solid-icon-mixin("\f041");
+}
+
+// A profile is decorated when this stylesheet recognizes the network; one that it does not
+// recognize is displayed without an icon rather than being omitted.
+.profile.github .icon {
+    .brand-icon-mixin("\f09b");
+}
+
+.profile.linkedin .icon {
+    .brand-icon-mixin("\f08c");
+}
+
+.profile.codestats .icon {
+    .solid-icon-mixin("\f11c");
+}
+
+// ----------------------------------------------------------------------
+// |  Screen
+// ----------------------------------------------------------------------
+
+// A narrow display cannot show a column that names an entry beside the content that it introduces,
+// so the two are stacked instead. The query is restricted to a screen, as a printed page is
+// narrower than this width yet has room to display the columns side by side.
 @media screen and (max-width: 767.98px) {
     body {
         padding: .75rem;
     }
 
-    #content {
+    #resume {
         padding: 1.5rem;
     }
 
-    // The keyword list header is listed as well, as the width that it is displayed with is not the
-    // one that its column would otherwise provide.
-    .row .col-3,
-    .row .col-5,
-    .row .col-6,
-    .keyword_list.line_item .header.subsection {
-        flex: 0 0 100%;
-        max-width: 100%;
+    .section,
+    .entry,
+    .skills .entry,
+    .interests .entry {
+        grid-template-columns: 1fr;
     }
 
-    .header.subsection {
-        text-align: left;
-    }
+    .section.basics {
 
-    .picture+.name {
-        font-size: 2.25em;
-        text-align: center;
+        .picture {
+            grid-row: auto;
+        }
 
-        // The size is expressed relative to the name, which is displayed at a smaller size here.
+        .name,
         .label {
-            font-size: .42em;
+            grid-column: auto;
+            text-align: center;
+        }
+
+        .name {
+            font-size: 2.25em;
         }
     }
 
-    .container-fluid.inline .col {
+    .entry-header {
+        text-align: left;
+    }
+
+    .detail {
         white-space: normal;
         overflow-wrap: break-word;
     }
 }
 
+// ----------------------------------------------------------------------
+// |  Print
+// ----------------------------------------------------------------------
 @media print {
-
-    // Bootstrap prints A3 paper by default. The size is restored to the one that the browser was
-    // asked to print, and the margins are declared here so that the result does not depend on the
-    // settings that the browser was invoked with.
     @page {
         size: auto;
         margin: .6in;
@@ -474,10 +599,6 @@ ul {
     }
 
     body {
-        // Bootstrap prints the content at a width that no page can display, which the browser then
-        // scales to fit; everything is displayed at ~75% of the size that was asked for as a result.
-        min-width: 0px !important;
-
         // Printed content is read at a closer distance than content on a screen, and a resume that
         // fits on a single page is preferred.
         font-size: .8em;
@@ -485,39 +606,40 @@ ul {
         background-color: @surface-color;
     }
 
-    // Bootstrap underlines every link when printing, which is noise on a page that cannot be
-    // followed.
-    #content a {
-        text-decoration: none;
-    }
-
-    #content {
+    #resume {
         max-width: none;
         padding: 0px;
         box-shadow: none;
 
         // A browser omits background colors when printing unless it is asked not to adjust them;
-        // without this, the tint that distinguishes the title is printed only when the person
+        // without this, the tint that distinguishes the basics is printed only when the person
         // printing has enabled background graphics.
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
+
+        // A link that cannot be followed is noise on a printed page.
+        a {
+            text-decoration: none;
+        }
+    }
+
+    // A heading is not worth printing at the bottom of a page. Entries are allowed to break, as
+    // keeping one whole costs the remainder of the page that it would not fit on -- and vertical
+    // space is the resource that determines how many pages are printed.
+    .section-header {
+        break-after: avoid;
     }
 
     // Vertical space is the resource that determines how many pages are printed.
-    .container-fluid {
-        .row-spacing-mixin(1.1rem);
-    }
+    .spacing-mixin(1.1rem);
 
-    // A filled badge consumes a large amount of ink.
-    .keyword_list.line_item {
-        .item .badge-primary {
+    // A filled keyword consumes a large amount of ink.
+    .keyword:has(a) {
+        background-color: transparent;
+        border-color: @badge-border-color;
 
-            &.link,
-            &.nolink {
-                background-color: transparent;
-                border: 1px solid @badge-border-color;
-                color: @accent-color;
-            }
+        a {
+            color: @accent-color;
         }
     }
 }

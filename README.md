@@ -37,22 +37,28 @@ The generated html names what each value is rather than how it is displayed, and
 Generate html from resume content and a stylesheet:
 
 ```shell
-uv run dbrownell_ResumeTools <content_filename> <style_filename> <output_directory>
+uv run dbrownell_ResumeTools <content_filename> <style_filename> [<output_directory>]
 ```
 
 | Argument | Description |
 | --- | --- |
 | `<content_filename>` | json or yaml content that conforms to the [JSON Resume](https://jsonresume.org/) schema. |
-| `<style_filename>` | A `.css` or `.less` stylesheet; less content is compiled to css. |
-| `<output_directory>` | Directory populated with the generated `index.html` and the stylesheet that it references. |
+| `<style_filename>` | A `.css` or `.less` stylesheet, provided as a filename or as an `http`/`https` url that references one; less content is compiled to css. |
+| `<output_directory>` | Directory populated with the generated `index.html` and the stylesheet that it references; a temporary directory that is removed once the process exits is used when this argument is not provided. |
 
 [Sample content](https://github.com/davidbrownell/dbrownell_ResumeTools/tree/main/src/dbrownell_ResumeTools/samples) and [themes](https://github.com/davidbrownell/dbrownell_ResumeTools/tree/main/src/dbrownell_ResumeTools/themes) are included with the package; this command generates and displays the sample resume when it is run from the directory that contains them:
 
 ```shell
-uv run dbrownell_ResumeTools samples/resume.json themes/standard.less ./output --serve --browser
+uv run dbrownell_ResumeTools resume.json standard.less --serve --browser
 ```
 
 `--serve` serves the generated content over http and `--browser` displays it in a browser, which is served until that browser is closed. Run `uv run dbrownell_ResumeTools --help` for all available options.
+
+A stylesheet may also be referenced by url, which applies a stylesheet that is not installed locally; the content that is downloaded is written to the output directory alongside the html that references it:
+
+```shell
+uv run dbrownell_ResumeTools resume.json https://raw.githubusercontent.com/davidbrownell/dbrownell_ResumeTools/main/src/dbrownell_ResumeTools/themes/standard.less --serve --browser
+```
 
 #### Creating a pdf
 Print the displayed content to a pdf from the browser itself (`Ctrl+P` / `Cmd+P`, then "Save as PDF"). The bundled stylesheets define `@media print` rules that compact the content for a printed page, so no separate command is involved. The pdf produced by each bundled stylesheet is linked in [the table below](#writing-a-stylesheet).
@@ -69,10 +75,12 @@ Four stylesheets are bundled to demonstrate the range. All of them are applied t
 | `timeline.less` | A full-width banner, dated entries hung off a vertical rail, and keywords as tags. | [pdf](https://github.com/davidbrownell/dbrownell_ResumeTools/blob/main/docs/sample_resume_timeline.pdf) |
 | `minimal.less` | Monochrome and monospaced, set in a nerd font whose glyphs replace the labels that would otherwise introduce a value. | [pdf](https://github.com/davidbrownell/dbrownell_ResumeTools/blob/main/docs/sample_resume_minimal.pdf) |
 
-<img src="https://raw.githubusercontent.com/davidbrownell/dbrownell_ResumeTools/main/docs/sample_resume_standard.png" alt="Sample resume generated from resume.json and standard.less" width="380" />
-<img src="https://raw.githubusercontent.com/davidbrownell/dbrownell_ResumeTools/main/docs/sample_resume_sidebar.png" alt="Sample resume generated from resume.json and sidebar.less" width="380" />
-<img src="https://raw.githubusercontent.com/davidbrownell/dbrownell_ResumeTools/main/docs/sample_resume_timeline.png" alt="Sample resume generated from resume.json and timeline.less" width="380" />
-<img src="https://raw.githubusercontent.com/davidbrownell/dbrownell_ResumeTools/main/docs/sample_resume_minimal.png" alt="Sample resume generated from resume.json and minimal.less" width="380" />
+| | |
+| :---: | :---: |
+| <img src="https://raw.githubusercontent.com/davidbrownell/dbrownell_ResumeTools/main/docs/sample_resume_standard.png" alt="Sample resume generated from resume.json and standard.less" width="380" /> | <img src="https://raw.githubusercontent.com/davidbrownell/dbrownell_ResumeTools/main/docs/sample_resume_sidebar.png" alt="Sample resume generated from resume.json and sidebar.less" width="380" /> |
+| `standard.less` | `sidebar.less` |
+| <img src="https://raw.githubusercontent.com/davidbrownell/dbrownell_ResumeTools/main/docs/sample_resume_timeline.png" alt="Sample resume generated from resume.json and timeline.less" width="380" /> | <img src="https://raw.githubusercontent.com/davidbrownell/dbrownell_ResumeTools/main/docs/sample_resume_minimal.png" alt="Sample resume generated from resume.json and minimal.less" width="380" /> |
+| `timeline.less` | `minimal.less` |
 
 <!-- Content below this delimiter will be copied to the generated README.md file. DO NOT REMOVE THIS COMMENT, as it will cause regeneration to fail. -->
 

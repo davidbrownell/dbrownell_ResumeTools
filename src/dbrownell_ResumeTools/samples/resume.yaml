@@ -4,7 +4,7 @@
 basics:
   name: Jane Q. Developer
   label: Principal Software Engineer
-  picture: https://example.com/jane/photo.jpg
+  picture: https://raw.githubusercontent.com/davidbrownell/dbrownell_ResumeTools/main/src/dbrownell_ResumeTools/samples/photo.png
   email: jane@example.com
   phone: (555) 555-0142
   website: https://jane.example.com

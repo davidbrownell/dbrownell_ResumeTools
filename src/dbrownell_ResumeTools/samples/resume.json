@@ -24,6 +24,11 @@
         "network": "LinkedIn",
         "username": "jane-q-developer",
         "url": "https://www.linkedin.com/in/jane-q-developer"
+      },
+      {
+        "network": "CodeStats",
+        "username": "janeqdeveloper",
+        "url": "https://codestats.net/users/janeqdeveloper"
       }
     ]
   },

@@ -42,7 +42,6 @@ FULL_CONTENT = """\
         - network: GitHub
           username: samtaylor
           url: https://github.com/samtaylor
-        # A network without a decorator is displayed without an icon.
         - network: Bitbucket
           username: sam
           url: https://bitbucket.org/sam
@@ -157,8 +156,6 @@ UNSAFE_URIS = [
 
 CSS = "body { color: red; }\n"
 
-FONTS_LINK = '  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:400,300,600|Merriweather:400,700" />\n'
-
 
 # ----------------------------------------------------------------------
 # |
@@ -169,8 +166,6 @@ def _Generate(
     tmp_path: Path,
     content: str,
     css_filename: Path | None = None,
-    *,
-    include_fonts: bool = True,
 ) -> tuple[Path, str]:
     """Generate html and return the output directory and the terminal output produced."""
 
@@ -182,7 +177,7 @@ def _Generate(
     sink = io.StringIO()
 
     with DoneManager.Create(sink, "Testing...") as dm:
-        GenerateHtml(dm, filename, output_directory, css_filename, include_fonts=include_fonts)
+        GenerateHtml(dm, filename, output_directory, css_filename)
 
     return output_directory, sink.getvalue()
 
@@ -192,12 +187,10 @@ def _GenerateContent(
     tmp_path: Path,
     content: str,
     css_filename: Path | None = None,
-    *,
-    include_fonts: bool = True,
 ) -> str:
     """Generate html and return the content that was generated."""
 
-    output_directory, _ = _Generate(tmp_path, content, css_filename, include_fonts=include_fonts)
+    output_directory, _ = _Generate(tmp_path, content, css_filename)
 
     return (output_directory / "index.html").read_text(encoding="utf-8")
 
@@ -242,43 +235,26 @@ def test_MinimalContent(tmp_path: Path):
           <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
           <title>Sam Taylor</title>
-
-          <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" />
-          <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/js/all.min.js"></script>
         </head>
         <body>
-          <div class="container-fluid" id="content">
-            <div class="row title">
-              <div class="col-3 section header picture">
-                <div></div>
+          <div id="resume">
+            <section class="section basics">
+              <div class="name"><p>Sam Taylor</p></div>
+            </section>
+            <section class="section contact">
+              <div class="section-header">
+                <span class="icon"></span>
+                <span class="heading">Contact</span>
               </div>
-              <div class="col section content name"><p>Sam Taylor</p></div>
-            </div>
-            <div class="row contact">
-              <div class="col-3 section header">
-                <div class="icon">
-                  <i class="fas fa-lg fa-address-book"></i>
-                </div>
-                <div>Contact</div>
-              </div>
-              <div class="col section content">
-                <div class="container-fluid inline">
-                  <div class="row">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                  </div>
-                </div>
-              </div>
-            </div>
+              <div class="section-body"></div>
+            </section>
           </div>
         </body>
         </html>
         """,
     )
 
-    assert _GenerateContent(tmp_path, MINIMAL_CONTENT, include_fonts=False) == expected
+    assert _GenerateContent(tmp_path, MINIMAL_CONTENT) == expected
 
 
 # ----------------------------------------------------------------------
@@ -289,49 +265,56 @@ def test_OutputDirIsCreated(tmp_path: Path):
 
 
 # ----------------------------------------------------------------------
-def test_Fonts(tmp_path: Path):
-    assert FONTS_LINK in _GenerateContent(tmp_path, MINIMAL_CONTENT)
+def test_TheDocumentReferencesNothingButTheStylesheet(tmp_path: Path):
+    """Presentation is the stylesheet's concern, so the document depends on nothing else."""
 
+    css_filename = tmp_path / "styles.css"
+    css_filename.write_text(CSS, encoding="utf-8")
 
-# ----------------------------------------------------------------------
-def test_WithoutFonts(tmp_path: Path):
-    assert FONTS_LINK not in _GenerateContent(tmp_path, MINIMAL_CONTENT, include_fonts=False)
+    content = _GenerateContent(tmp_path, FULL_CONTENT, css_filename)
+
+    assert content.count("<link ") == 1
+    assert "<script" not in content
+    assert "bootstrap" not in content
+    assert "font-awesome" not in content
+    assert "fonts.googleapis.com" not in content
 
 
 # ----------------------------------------------------------------------
 def test_EmptySectionsAreNotDisplayed(tmp_path: Path):
     content = _GenerateContent(tmp_path, MINIMAL_CONTENT)
 
-    assert "row profiles" not in content
-    assert "row about" not in content
-    assert "row skills" not in content
-    assert "row experiences" not in content
-    assert "row educations" not in content
-    assert "row volunteers" not in content
-    assert "row awards" not in content
-    assert "row publications" not in content
-    assert "row languages" not in content
-    assert "row interests" not in content
-    assert "row references" not in content
+    for name in [
+        "profiles",
+        "about",
+        "skills",
+        "work",
+        "education",
+        "volunteer",
+        "awards",
+        "publications",
+        "languages",
+        "interests",
+        "references",
+    ]:
+        assert f'class="section {name}"' not in content
 
 
 # ----------------------------------------------------------------------
 # |
-# |  Title
+# |  Basics
 # |
 # ----------------------------------------------------------------------
-def test_Title(tmp_path: Path):
+def test_Basics(tmp_path: Path):
     expected = _Fragment(
         """\
-        <div class="row title">
-          <div class="col-3 section header picture">
+        <section class="section basics">
+          <div class="picture">
             <img src="https://example.com/photo.jpg" alt="Picture of Sam Taylor">
           </div>
-          <div class="col section content name">
-            <p>Sam Taylor</p>
-            <div class="label">Principal Engineer</div>
-          </div>
-        </div>
+          <div class="name"><p>Sam Taylor</p></div>
+          <div class="label">Principal Engineer</div>
+        </section>
         """,
         2,
     )
@@ -340,8 +323,17 @@ def test_Title(tmp_path: Path):
 
 
 # ----------------------------------------------------------------------
-def test_TitleWithoutALabel(tmp_path: Path):
-    assert '<div class="label">' not in _GenerateContent(tmp_path, MINIMAL_CONTENT)
+def test_BasicsWithoutAPictureOrLabel(tmp_path: Path):
+    expected = _Fragment(
+        """\
+        <section class="section basics">
+          <div class="name"><p>Sam Taylor</p></div>
+        </section>
+        """,
+        2,
+    )
+
+    assert expected in _GenerateContent(tmp_path, MINIMAL_CONTENT)
 
 
 # ----------------------------------------------------------------------
@@ -352,44 +344,36 @@ def test_TitleWithoutALabel(tmp_path: Path):
 def test_Contact(tmp_path: Path):
     expected = _Fragment(
         """\
-        <div class="row">
-          <div class="detail col">
-            <div class="icon">
-              <i class="fas fa-lg fa-envelope"></i>
-            </div>
-            <div class="info email">
+        <div class="section-body">
+          <div class="detail email">
+            <span class="icon"></span>
+            <span class="value">
               <a href="mailto:sam@example.com" alt="email address" target="_blank">sam@example.com</a>
-            </div>
+            </span>
           </div>
-          <div class="detail col">
-            <div class="icon">
-              <i class="fas fa-lg fa-link"></i>
-            </div>
-            <div class="info website">
+          <div class="detail website">
+            <span class="icon"></span>
+            <span class="value">
               <a href="https://example.com" alt="website" target="_blank">https://example.com</a>
-            </div>
+            </span>
           </div>
-          <div class="detail col">
-            <div class="icon">
-              <i class="fas fa-lg fa-phone"></i>
-            </div>
-            <div class="info phone">
+          <div class="detail phone">
+            <span class="icon"></span>
+            <span class="value">
               <a href="tel:(555) 555-0142" alt="phone number" target="_blank">(555) 555-0142</a>
-            </div>
+            </span>
           </div>
-          <div class="detail col">
-            <div class="icon">
-              <i class="fas fa-lg fa-map-marker"></i>
-            </div>
-            <div class="info location">
-              <div class="city">Raleigh</div>
-              <div class="region">NC</div>
-              <div class="countryCode">US</div>
-            </div>
+          <div class="detail location">
+            <span class="icon"></span>
+            <span class="value">
+              <span class="city">Raleigh</span>
+              <span class="region">NC</span>
+              <span class="countryCode">US</span>
+            </span>
           </div>
         </div>
         """,
-        5,
+        3,
     )
 
     assert expected in _GenerateContent(tmp_path, FULL_CONTENT)
@@ -413,13 +397,14 @@ def test_LocationWithoutOptionalValues(tmp_path: Path):
 
     expected = _Fragment(
         """\
-        <div class="info location">
-          <div class="city">Raleigh</div>
-          <span></span>
-          <span></span>
+        <div class="detail location">
+          <span class="icon"></span>
+          <span class="value">
+            <span class="city">Raleigh</span>
+          </span>
         </div>
         """,
-        7,
+        4,
     )
 
     assert expected in content
@@ -436,26 +421,22 @@ def test_LocationWithoutOptionalValues(tmp_path: Path):
 def test_Profiles(tmp_path: Path):
     expected = _Fragment(
         """\
-        <div class="row">
-          <div class="detail col">
-            <div class="icon network">
-              <a href="https://github.com/" aria-label="Link to GitHub" target="_blank">
-                <i class="fa-lg fab fa-github"></i>
-              </a>
-            </div>
-            <div class="info link">
+        <div class="section-body">
+          <div class="detail profile github">
+            <span class="icon"></span>
+            <span class="value">
               <a href="https://github.com/samtaylor" alt="Profile link to GitHub" target="_blank">samtaylor</a>
-            </div>
+            </span>
           </div>
-          <div class="detail col">
-            <span></span>
-            <div class="info link">
+          <div class="detail profile bitbucket">
+            <span class="icon"></span>
+            <span class="value">
               <a href="https://bitbucket.org/sam" alt="Profile link to Bitbucket" target="_blank">sam</a>
-            </div>
+            </span>
           </div>
         </div>
         """,
-        5,
+        3,
     )
 
     assert expected in _GenerateContent(tmp_path, FULL_CONTENT)
@@ -463,14 +444,17 @@ def test_Profiles(tmp_path: Path):
 
 # ----------------------------------------------------------------------
 @pytest.mark.parametrize(
-    ("network", "icon"),
+    ("network", "expected_class"),
     [
-        ("linkedin", "fab fa-linkedin"),
-        ("GitHub", "fab fa-github"),
-        ("CodeStats", "fas fa-keyboard"),
+        ("linkedin", "linkedin"),
+        ("GitHub", "github"),
+        ("Code Stats", "code-stats"),
+        ("Stack Overflow!", "stack-overflow"),
     ],
 )
-def test_ProfileNetworksAreCaseInsensitive(tmp_path: Path, network: str, icon: str):
+def test_ProfileNetworkIsProvidedAsAClass(tmp_path: Path, network: str, expected_class: str):
+    """The stylesheet decorates the networks that it recognizes, so the network becomes a class."""
+
     content = _GenerateContent(
         tmp_path,
         f"""\
@@ -483,7 +467,7 @@ def test_ProfileNetworksAreCaseInsensitive(tmp_path: Path, network: str, icon: s
         """,
     )
 
-    assert f'<i class="fa-lg {icon}"></i>' in content
+    assert f'<div class="detail profile {expected_class}">' in content
 
 
 # ----------------------------------------------------------------------
@@ -494,15 +478,15 @@ def test_ProfileNetworksAreCaseInsensitive(tmp_path: Path, network: str, icon: s
 def test_About(tmp_path: Path):
     expected = _Fragment(
         """\
-        <div class="row about">
-          <div class="col-3 section header">
-            <div class="icon">
-              <i class="fas fa-lg fa-user"></i>
-            </div>
-            <div>About</div>
+        <section class="section about">
+          <div class="section-header">
+            <span class="icon"></span>
+            <span class="heading">About</span>
           </div>
-          <div class="col section content"><p>A <strong>summary</strong>.</p></div>
-        </div>
+          <div class="section-body">
+            <div class="summary"><p>A <strong>summary</strong>.</p></div>
+          </div>
+        </section>
         """,
         2,
     )
@@ -518,19 +502,25 @@ def test_About(tmp_path: Path):
 def test_Skills(tmp_path: Path):
     expected = _Fragment(
         """\
-        <div class="row line_item keyword_list skill">
-          <div class="col-5 subsection header">
-            <div class="name">Python</div>
+        <section class="section skills">
+          <div class="section-header">
+            <span class="icon"></span>
+            <span class="heading">Skills</span>
           </div>
-          <div class="col subsection content">
-            <div class="keywords">
-              <div class="item">
-                <div class="nolink badge badge-pill badge-primary">asyncio</div>
+          <div class="section-body">
+            <div class="entry">
+              <div class="entry-header">
+                <div class="name">Python</div>
               </div>
-              <div class="item"><a href="https://tokio.rs" class="link badge badge-pill badge-primary" target="_blank">tokio</a></div>
+              <div class="entry-body">
+                <ul class="keywords">
+                  <li class="keyword">asyncio</li>
+                  <li class="keyword"><a href="https://tokio.rs" target="_blank">tokio</a></li>
+                </ul>
+              </div>
             </div>
           </div>
-        </div>
+        </section>
         """,
         2,
     )
@@ -539,8 +529,8 @@ def test_Skills(tmp_path: Path):
 
 
 # ----------------------------------------------------------------------
-def test_SkillKeywordThatRendersWithoutAnElement(tmp_path: Path):
-    """Rendered content that does not begin with an element is displayed as a badge."""
+def test_KeywordTextIsEscaped(tmp_path: Path):
+    """A keyword that renders as text rather than as markup is displayed as escaped text."""
 
     content = _GenerateContent(
         tmp_path,
@@ -554,16 +544,7 @@ def test_SkillKeywordThatRendersWithoutAnElement(tmp_path: Path):
         """,
     )
 
-    expected = _Fragment(
-        """\
-        <div class="item">
-          <div class="nolink badge badge-pill badge-primary">R&amp;D</div>
-        </div>
-        """,
-        5,
-    )
-
-    assert expected in content
+    assert '<li class="keyword">R&amp;D</li>' in content
 
 
 # ----------------------------------------------------------------------
@@ -577,15 +558,15 @@ def test_Work(tmp_path: Path):
     # A current position with a website is displayed as a link
     current = _Fragment(
         """\
-        <div class="row line_item experience">
-          <div class="col-3 subsection header">
+        <div class="entry">
+          <div class="entry-header">
             <div class="company">
               <a href="https://northwind.example.com" alt="Northwind" target="_blank">Northwind</a>
             </div>
             <div class="startDate">March 2019</div>
             <div class="endDate">Present</div>
           </div>
-          <div class="col subsection content">
+          <div class="entry-body">
             <div class="position">Engineer</div>
             <div class="summary"><p>Did work.</p></div>
             <ul class="highlights">
@@ -595,27 +576,28 @@ def test_Work(tmp_path: Path):
           </div>
         </div>
         """,
-        2,
+        4,
     )
 
     # A previous position without a website or highlights is displayed as text
     previous = _Fragment(
         """\
-        <div class="row line_item experience">
-          <div class="col-3 subsection header">
+        <div class="entry">
+          <div class="entry-header">
             <div class="company">Contoso</div>
             <div class="startDate">June 2014</div>
             <div class="endDate">February 2019</div>
           </div>
-          <div class="col subsection content">
+          <div class="entry-body">
             <div class="position">Senior Engineer</div>
             <div class="summary"><p>Did other work.</p></div>
           </div>
         </div>
         """,
-        2,
+        4,
     )
 
+    assert '<span class="heading">Work Experience</span>' in content
     assert current in content
     assert previous in content
 
@@ -628,30 +610,30 @@ def test_Work(tmp_path: Path):
 def test_Volunteer(tmp_path: Path):
     expected = _Fragment(
         """\
-        <div class="row volunteers">
-          <div class="col-6 section header">
-            <div class="icon">
-              <i class="fas fa-lg fa-handshake-angle"></i>
+        <section class="section volunteer">
+          <div class="section-header">
+            <span class="icon"></span>
+            <span class="heading">Volunteer Experience</span>
+          </div>
+          <div class="section-body">
+            <div class="entry">
+              <div class="entry-header">
+                <div class="organization">
+                  <a href="https://triangle.example.org" alt="Code for the Triangle" target="_blank">Code for the Triangle</a>
+                </div>
+                <div class="startDate">September 2020</div>
+                <div class="endDate">May 2023</div>
+              </div>
+              <div class="entry-body">
+                <div class="position">Mentor</div>
+                <div class="summary"><p>Mentored developers.</p></div>
+                <ul class="highlights">
+                  <li>Led a curriculum.</li>
+                </ul>
+              </div>
             </div>
-            <div>Volunteer Experience</div>
           </div>
-        </div>
-        <div class="row line_item volunteer">
-          <div class="col-3 subsection header">
-            <div class="organization">
-              <a href="https://triangle.example.org" alt="Code for the Triangle" target="_blank">Code for the Triangle</a>
-            </div>
-            <div class="startDate">September 2020</div>
-            <div class="endDate">May 2023</div>
-          </div>
-          <div class="col subsection content">
-            <div class="position">Mentor</div>
-            <div class="summary"><p>Mentored developers.</p></div>
-            <ul class="highlights">
-              <li>Led a curriculum.</li>
-            </ul>
-          </div>
-        </div>
+        </section>
         """,
         2,
     )
@@ -669,12 +651,12 @@ def test_Education(tmp_path: Path):
 
     with_optional_values = _Fragment(
         """\
-        <div class="row line_item education">
-          <div class="col-3 subsection header">
+        <div class="entry">
+          <div class="entry-header">
             <div class="institution">Georgia Tech</div>
             <div class="endDate">May 2014</div>
           </div>
-          <div class="col subsection content">
+          <div class="entry-body">
             <div class="studyType">Master of Science</div>
             <div class="area">Computer Science</div>
             <div class="gpa">3.9</div>
@@ -684,25 +666,25 @@ def test_Education(tmp_path: Path):
           </div>
         </div>
         """,
-        2,
+        4,
     )
 
     without_optional_values = _Fragment(
         """\
-        <div class="row line_item education">
-          <div class="col-3 subsection header">
+        <div class="entry">
+          <div class="entry-header">
             <div class="institution">UNC</div>
-            <div class="endDate"></div>
           </div>
-          <div class="col subsection content">
+          <div class="entry-body">
             <div class="studyType">Bachelor of Science</div>
             <div class="area">Computer Science</div>
           </div>
         </div>
         """,
-        2,
+        4,
     )
 
+    assert '<span class="heading">Education</span>' in content
     assert with_optional_values in content
     assert without_optional_values in content
 
@@ -715,24 +697,24 @@ def test_Education(tmp_path: Path):
 def test_Awards(tmp_path: Path):
     expected = _Fragment(
         """\
-        <div class="row awards">
-          <div class="col-6 section header">
-            <div class="icon">
-              <i class="fas fa-lg fa-trophy"></i>
+        <section class="section awards">
+          <div class="section-header">
+            <span class="icon"></span>
+            <span class="heading">Awards</span>
+          </div>
+          <div class="section-body">
+            <div class="entry">
+              <div class="entry-header">
+                <div class="awarder">Northwind</div>
+                <div class="date">November 2022</div>
+              </div>
+              <div class="entry-body">
+                <div class="title">Excellence Award</div>
+                <div class="summary"><p>For impact.</p></div>
+              </div>
             </div>
-            <div>Awards</div>
           </div>
-        </div>
-        <div class="row line_item award">
-          <div class="col-3 subsection header">
-            <div class="awarder">Northwind</div>
-            <div class="date">November 2022</div>
-          </div>
-          <div class="col subsection content">
-            <div class="title">Excellence Award</div>
-            <div class="summary"><p>For impact.</p></div>
-          </div>
-        </div>
+        </section>
         """,
         2,
     )
@@ -751,20 +733,12 @@ def test_Publications(tmp_path: Path):
     # A publication with a website is displayed as a link
     with_website = _Fragment(
         """\
-        <div class="row publications">
-          <div class="col-6 section header">
-            <div class="icon">
-              <i class="fas fa-lg fa-book"></i>
-            </div>
-            <div>Publications</div>
-          </div>
-        </div>
-        <div class="row line_item publication">
-          <div class="col-3 subsection header">
+        <div class="entry">
+          <div class="entry-header">
             <div class="publisher">ACM Queue</div>
             <div class="releaseDate">April 2018</div>
           </div>
-          <div class="col subsection content">
+          <div class="entry-body">
             <div class="name">
               <a href="https://example.com/publication" alt="Stream Processing" target="_blank">Stream Processing</a>
             </div>
@@ -772,26 +746,27 @@ def test_Publications(tmp_path: Path):
           </div>
         </div>
         """,
-        2,
+        4,
     )
 
     # A publication without a website is displayed as text
     without_website = _Fragment(
         """\
-        <div class="row line_item publication">
-          <div class="col-3 subsection header">
+        <div class="entry">
+          <div class="entry-header">
             <div class="publisher">IEEE Software</div>
             <div class="releaseDate">July 2021</div>
           </div>
-          <div class="col subsection content">
+          <div class="entry-body">
             <div class="name">Reproducible Builds</div>
             <div class="summary"><p>Some techniques.</p></div>
           </div>
         </div>
         """,
-        2,
+        4,
     )
 
+    assert '<span class="heading">Publications</span>' in content
     assert with_website in content
     assert without_website in content
 
@@ -804,28 +779,28 @@ def test_Publications(tmp_path: Path):
 def test_Languages(tmp_path: Path):
     expected = _Fragment(
         """\
-        <div class="row languages">
-          <div class="col-3 section header">
-            <div class="icon">
-              <i class="fas fa-lg fa-language"></i>
-            </div>
-            <div>Languages</div>
+        <section class="section languages">
+          <div class="section-header">
+            <span class="icon"></span>
+            <span class="heading">Languages</span>
           </div>
-          <div class="col section content">
-            <div class="container-fluid inline">
-              <div class="row">
-                <div class="detail col">
-                  <div class="language">English</div>
-                  <div class="fluency">Native speaker</div>
-                </div>
-                <div class="detail col">
-                  <div class="language">Spanish</div>
-                  <div class="fluency">Professional working proficiency</div>
-                </div>
-              </div>
+          <div class="section-body">
+            <div class="detail language">
+              <span class="icon"></span>
+              <span class="value">
+                <span class="name">English</span>
+                <span class="fluency">Native speaker</span>
+              </span>
+            </div>
+            <div class="detail language">
+              <span class="icon"></span>
+              <span class="value">
+                <span class="name">Spanish</span>
+                <span class="fluency">Professional working proficiency</span>
+              </span>
             </div>
           </div>
-        </div>
+        </section>
         """,
         2,
     )
@@ -843,26 +818,24 @@ def test_Interests(tmp_path: Path):
 
     expected = _Fragment(
         """\
-        <div class="row interests">
-          <div class="col-6 section header">
-            <div class="icon">
-              <i class="fas fa-lg fa-heart"></i>
-            </div>
-            <div>Interests</div>
+        <section class="section interests">
+          <div class="section-header">
+            <span class="icon"></span>
+            <span class="heading">Interests</span>
           </div>
-        </div>
-        <div class="row line_item keyword_list interest">
-          <div class="col-5 subsection header">
-            <div class="name">Woodworking</div>
-          </div>
-          <div class="col subsection content">
-            <div class="keywords">
-              <div class="item">
-                <div class="nolink badge badge-pill badge-primary">joinery</div>
+          <div class="section-body">
+            <div class="entry">
+              <div class="entry-header">
+                <div class="name">Woodworking</div>
+              </div>
+              <div class="entry-body">
+                <ul class="keywords">
+                  <li class="keyword">joinery</li>
+                </ul>
               </div>
             </div>
           </div>
-        </div>
+        </section>
         """,
         2,
     )
@@ -884,11 +857,11 @@ def test_InterestWithoutKeywords(tmp_path: Path):
 
     expected = _Fragment(
         """\
-        <div class="col subsection content">
-          <div class="keywords"></div>
+        <div class="entry-body">
+          <ul class="keywords"></ul>
         </div>
         """,
-        3,
+        5,
     )
 
     assert expected in content
@@ -904,37 +877,32 @@ def test_References(tmp_path: Path):
 
     with_reference = _Fragment(
         """\
-        <div class="row references">
-          <div class="col-6 section header">
-            <div class="icon">
-              <i class="fas fa-lg fa-quote-left"></i>
-            </div>
-            <div>References</div>
-          </div>
-        </div>
-        <div class="row line_item reference">
-          <div class="col-3 subsection header">
+        <div class="entry">
+          <div class="entry-header">
             <div class="name">Alex Rivera</div>
           </div>
-          <div class="col subsection content"><p>A <strong>reference</strong>.</p></div>
+          <div class="entry-body">
+            <div class="reference"><p>A <strong>reference</strong>.</p></div>
+          </div>
         </div>
         """,
-        2,
+        4,
     )
 
     # The name remains visible when the reference text is not available
     without_reference = _Fragment(
         """\
-        <div class="row line_item reference">
-          <div class="col-3 subsection header">
+        <div class="entry">
+          <div class="entry-header">
             <div class="name">Priya Raman</div>
           </div>
-          <div class="col subsection content"></div>
+          <div class="entry-body"></div>
         </div>
         """,
-        2,
+        4,
     )
 
+    assert '<span class="heading">References</span>' in content
     assert with_reference in content
     assert without_reference in content
 
@@ -1004,12 +972,9 @@ def test_SafeUrisAreDisplayed(tmp_path: Path):
 def test_UnsafePictureIsNotDisplayed(tmp_path: Path):
     expected = _Fragment(
         """\
-        <div class="row title">
-          <div class="col-3 section header picture">
-            <div></div>
-          </div>
-          <div class="col section content name"><p>Sam Taylor</p></div>
-        </div>
+        <section class="section basics">
+          <div class="name"><p>Sam Taylor</p></div>
+        </section>
         """,
         2,
     )
@@ -1021,21 +986,16 @@ def test_UnsafePictureIsNotDisplayed(tmp_path: Path):
 def test_UnsafeWebsiteIsNotDisplayed(tmp_path: Path):
     expected = _Fragment(
         """\
-        <div class="row">
-          <div class="detail col">
-            <div class="icon">
-              <i class="fas fa-lg fa-envelope"></i>
-            </div>
-            <div class="info email">
+        <div class="section-body">
+          <div class="detail email">
+            <span class="icon"></span>
+            <span class="value">
               <a href="mailto:sam@example.com" alt="email address" target="_blank">sam@example.com</a>
-            </div>
+            </span>
           </div>
-          <span></span>
-          <span></span>
-          <span></span>
         </div>
         """,
-        5,
+        3,
     )
 
     assert expected in _GenerateContent(tmp_path, UNSAFE_CONTENT)
@@ -1047,16 +1007,12 @@ def test_UnsafeProfileIsDisplayedWithoutALink(tmp_path: Path):
 
     expected = _Fragment(
         """\
-        <div class="detail col">
-          <div class="icon network">
-            <a href="https://github.com/" aria-label="Link to GitHub" target="_blank">
-              <i class="fa-lg fab fa-github"></i>
-            </a>
-          </div>
-          <div class="info link">samtaylor</div>
+        <div class="detail profile github">
+          <span class="icon"></span>
+          <span class="value">samtaylor</span>
         </div>
         """,
-        6,
+        4,
     )
 
     assert expected in _GenerateContent(tmp_path, UNSAFE_CONTENT)
@@ -1068,19 +1024,19 @@ def test_UnsafeCompanyIsDisplayedWithoutALink(tmp_path: Path):
 
     expected = _Fragment(
         """\
-        <div class="row line_item experience">
-          <div class="col-3 subsection header">
+        <div class="entry">
+          <div class="entry-header">
             <div class="company">Contoso</div>
             <div class="startDate">June 2014</div>
             <div class="endDate">February 2019</div>
           </div>
-          <div class="col subsection content">
+          <div class="entry-body">
             <div class="position">Engineer</div>
             <div class="summary"><p>Did work.</p></div>
           </div>
         </div>
         """,
-        2,
+        4,
     )
 
     assert expected in _GenerateContent(tmp_path, UNSAFE_CONTENT)
@@ -1092,12 +1048,12 @@ def test_UnsafePublicationIsDisplayedWithoutALink(tmp_path: Path):
 
     expected = _Fragment(
         """\
-        <div class="col subsection content">
+        <div class="entry-body">
           <div class="name">Stream Processing</div>
           <div class="summary"><p>An account.</p></div>
         </div>
         """,
-        3,
+        5,
     )
 
     assert expected in _GenerateContent(tmp_path, UNSAFE_CONTENT)
@@ -1150,7 +1106,7 @@ def test_UnsafeUriWithAnInsignificantCharacterIsNotDisplayed(tmp_path: Path, uri
     content = (output_directory / "index.html").read_text(encoding="utf-8")
 
     assert "script:alert(1)" not in content
-    assert '<i class="fas fa-lg fa-link"></i>' not in content
+    assert '<div class="detail website">' not in content
 
 
 # ----------------------------------------------------------------------
@@ -1185,7 +1141,7 @@ def test_UnsafeUriWithinMarkdownIsNotDisplayed(tmp_path: Path):
         """,
     )
 
-    assert '<div class="col section content"><p>See [my work](javascript:alert(1)).</p></div>' in content
+    assert '<div class="summary"><p>See [my work](javascript:alert(1)).</p></div>' in content
 
 
 # ----------------------------------------------------------------------

@@ -1,0 +1,567 @@
+/* A third presentation of the markup that `standard.less` also styles.
+
+   Nothing here is coordinated with the generator: the same html produces a resume introduced by a
+   full-width banner, with the entries of every section hung off a vertical rail that a marker
+   attaches each of them to. The class contract that these stylesheets target is documented at the
+   top of `standard.less`. */
+
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css");
+@import url("https://fonts.googleapis.com/css?family=Barlow:400,500,600|Barlow+Semi+Condensed:500,600&display=swap");
+
+@banner-color: #10403b;
+@banner-text-color: #e8f1ef;
+@banner-muted-color: #93b4af;
+@accent-color: #14746f;
+@surface-color: white;
+@page-color: #eef2f1;
+@text-color: #22282b;
+@muted-color: #667075;
+@rule-color: #d3dedb;
+
+@page-padding: 2.5rem;
+
+// The rail is drawn by the border of the content that it introduces, so the marker that attaches an
+// entry to it is positioned in terms of the space that the border is separated by.
+@rail-gap: 1.5rem;
+@rail-width: .125rem;
+@marker-size: .6rem;
+
+.condensed-text-mixin() {
+    font-family: "Barlow Semi Condensed", "Barlow", "Segoe UI", Roboto, Arial, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+
+// An icon is content that this stylesheet provides rather than markup that the generator produces.
+.solid-icon-mixin(@glyph) {
+    &::before {
+        content: @glyph;
+        font-family: "Font Awesome 6 Free";
+        font-weight: 900;
+    }
+}
+
+.brand-icon-mixin(@glyph) {
+    &::before {
+        content: @glyph;
+        font-family: "Font Awesome 6 Brands";
+        font-weight: 400;
+    }
+}
+
+// The sections that make up the banner; they are introduced together rather than one at a time.
+.banner-sections-mixin(@rules) {
+
+    .basics,
+    .contact,
+    .profiles {
+        @rules();
+    }
+}
+
+// The sections whose entries are dated; a rail displays a sequence in time, so a section whose
+// entries are not ordered by one is displayed without it.
+.dated-sections-mixin(@rules) {
+
+    .work,
+    .education,
+    .volunteer,
+    .awards,
+    .publications {
+        @rules();
+    }
+}
+
+// Everything that the banner does not display.
+.body-sections-mixin(@rules) {
+
+    .about,
+    .skills,
+    .work,
+    .education,
+    .volunteer,
+    .awards,
+    .publications,
+    .languages,
+    .interests,
+    .references {
+        @rules();
+    }
+}
+
+// The space that separates sections and entries, expressed once so that a printed page can display
+// the same content more compactly without repeating the selectors that position it. The sections
+// that make up the banner are not separated from one another, as the fill that they are displayed
+// against would be interrupted by the space between them.
+.spacing-mixin(@gap) {
+    .body-sections-mixin({
+            margin-top: @gap;
+        });
+
+    .entry+.entry {
+        margin-top: @gap * .75;
+    }
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: "Barlow", -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: .95em;
+    line-height: 1.5;
+    color: @text-color;
+    background-color: @page-color;
+    padding: 2rem 1rem;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+ul {
+    margin: 0;
+    padding-left: 1.1em;
+}
+
+#resume {
+    max-width: 54rem;
+    margin: auto;
+    background-color: @surface-color;
+    box-shadow: 0 2px 12px rgba(16, 64, 59, .18);
+    padding-bottom: @page-padding;
+
+    // Rendered markdown begins and ends with a paragraph whose margins would otherwise be added to
+    // the space that separates one value from the next.
+    p:first-child {
+        margin-top: 0;
+    }
+
+    p:last-child {
+        margin-bottom: 0;
+    }
+}
+
+.spacing-mixin(1.75rem);
+
+// ----------------------------------------------------------------------
+// |  Banner
+// ----------------------------------------------------------------------
+
+// The sections that introduce the person are displayed against a fill that spans the width of the
+// document, which distinguishes them from the content that they introduce.
+.banner-sections-mixin({
+        background-color: @banner-color;
+        color: @banner-text-color;
+        padding: 0 @page-padding;
+        text-align: center;
+    });
+
+.basics {
+    padding-top: 2.25rem;
+
+    .picture img {
+        width: 6rem;
+        height: 6rem;
+        object-fit: cover;
+        border-radius: 50%;
+        border: @rail-width solid @accent-color;
+    }
+
+    .name {
+        .condensed-text-mixin();
+
+        font-size: 2.4rem;
+        font-weight: 600;
+        line-height: 1.1;
+        margin-top: .5rem;
+    }
+
+    .label {
+        color: @banner-muted-color;
+        letter-spacing: .04em;
+    }
+}
+
+.profiles {
+    padding-bottom: 1.75rem;
+}
+
+// The contact and profile details are identified by their icons, so the headings that introduce
+// them are not displayed.
+.contact,
+.profiles {
+    .section-header {
+        display: none;
+    }
+
+    .detail {
+        display: inline-flex;
+        align-items: baseline;
+        font-size: .85rem;
+        margin: 0 .6rem;
+        color: @banner-muted-color;
+    }
+
+    .icon {
+        padding-right: .4em;
+    }
+}
+
+// ----------------------------------------------------------------------
+// |  Sections
+// ----------------------------------------------------------------------
+.body-sections-mixin({
+        padding: 0 @page-padding;
+    });
+
+.about {
+    margin-top: @page-padding;
+}
+
+.section-header {
+    .condensed-text-mixin();
+
+    color: @accent-color;
+    font-size: .95rem;
+    font-weight: 600;
+    margin-bottom: .75rem;
+
+    .icon {
+        padding-right: .5em;
+    }
+}
+
+// ----------------------------------------------------------------------
+// |  Rail
+// ----------------------------------------------------------------------
+
+// The rail spans the entries as a whole rather than any one of them, so it is drawn by the section
+// that contains them rather than by the entries that attach to it.
+.dated-sections-mixin({
+        .section-body {
+            border-left: @rail-width solid @rule-color;
+            padding-left: @rail-gap;
+            margin-left: @marker-size * .5;
+        }
+
+        .entry {
+            position: relative;
+        }
+
+        // The marker is centered on the rail, which sits at the far edge of the space that
+        // separates it from the content, and on the first line of the entry that it attaches.
+        .entry::before {
+            content: "";
+            position: absolute;
+            left: -(@rail-gap + @rail-width * .5 + @marker-size * .5);
+            top: .5rem;
+            width: @marker-size;
+            height: @marker-size;
+            border-radius: 50%;
+            background-color: @surface-color;
+            border: @rail-width solid @accent-color;
+        }
+    });
+
+// ----------------------------------------------------------------------
+// |  Entries
+// ----------------------------------------------------------------------
+
+// The value that names the entry takes the space that the dates do not, which aligns the dates to
+// the right of the entry that they qualify.
+.entry-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+
+    >:first-child {
+        flex: 1 1 auto;
+        font-size: 1.05em;
+        font-weight: 600;
+    }
+}
+
+.startDate,
+.endDate,
+.date,
+.releaseDate {
+    .condensed-text-mixin();
+
+    flex: 0 0 auto;
+    font-size: .78rem;
+    color: @muted-color;
+    margin-left: 1rem;
+}
+
+// The dates are displayed as a single range rather than as two values that are separated from one
+// another. The spaces are escaped so that they survive compression.
+.startDate::after {
+    content: "\00a0\2013\00a0";
+}
+
+.startDate+.endDate {
+    margin-left: 0;
+}
+
+// The value that names an entry within a section, whatever the schema calls it.
+.position,
+.studyType,
+.awards .title,
+.publications .name {
+    color: @accent-color;
+    font-weight: 600;
+}
+
+.area,
+.courses,
+.gpa {
+    color: @muted-color;
+    font-size: .85em;
+}
+
+.gpa::before {
+    content: "GPA\00a0";
+}
+
+.summary,
+.highlights {
+    margin-top: .25rem;
+}
+
+.references .reference {
+    color: @muted-color;
+    font-style: italic;
+}
+
+// ----------------------------------------------------------------------
+// |  Details
+// ----------------------------------------------------------------------
+.languages .detail {
+    display: inline-block;
+    margin-right: 1.5rem;
+}
+
+// The values within these details are displayed as flex items so that the line breaks between them
+// in the markup are not displayed as spaces that would precede the separator.
+.location .value,
+.language .value {
+    display: inline-flex;
+}
+
+// The separator precedes the value rather than follows it, as the region and country code are
+// omitted when they are not available; the city is always displayed.
+.location .region::before,
+.location .countryCode::before {
+    content: ",\00a0";
+}
+
+.fluency {
+    color: @muted-color;
+
+    &::before {
+        content: "\00a0\2014\00a0";
+    }
+}
+
+// ----------------------------------------------------------------------
+// |  Skills and Interests
+// ----------------------------------------------------------------------
+
+// A keyword is a single word or phrase rather than a sentence, so it is displayed as a tag rather
+// than as part of a line of text.
+.keywords {
+    list-style: none;
+    padding: 0;
+    margin-top: .35rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem;
+}
+
+.keyword {
+    font-size: .78rem;
+    padding: .2em .8em;
+    border-radius: 999px;
+    background-color: fade(@accent-color, 10%);
+    color: @accent-color;
+}
+
+// ----------------------------------------------------------------------
+// |  Icons
+// ----------------------------------------------------------------------
+.icon {
+    color: inherit;
+}
+
+.contact .section-header .icon {
+    .solid-icon-mixin("\f2b9");
+}
+
+.profiles .section-header .icon {
+    .solid-icon-mixin("\23");
+}
+
+.about .section-header .icon {
+    .solid-icon-mixin("\f007");
+}
+
+.skills .section-header .icon {
+    .solid-icon-mixin("\f121");
+}
+
+.work .section-header .icon {
+    .solid-icon-mixin("\f14b");
+}
+
+.education .section-header .icon {
+    .solid-icon-mixin("\f19d");
+}
+
+.volunteer .section-header .icon {
+    .solid-icon-mixin("\f4c4");
+}
+
+.awards .section-header .icon {
+    .solid-icon-mixin("\f091");
+}
+
+.publications .section-header .icon {
+    .solid-icon-mixin("\f02d");
+}
+
+.languages .section-header .icon {
+    .solid-icon-mixin("\f1ab");
+}
+
+.interests .section-header .icon {
+    .solid-icon-mixin("\f004");
+}
+
+.references .section-header .icon {
+    .solid-icon-mixin("\f10d");
+}
+
+.email .icon {
+    .solid-icon-mixin("\f0e0");
+}
+
+.website .icon {
+    .solid-icon-mixin("\f0c1");
+}
+
+.phone .icon {
+    .solid-icon-mixin("\f095");
+}
+
+.location .icon {
+    .solid-icon-mixin("\f041");
+}
+
+// A profile is decorated when this stylesheet recognizes the network; one that it does not
+// recognize is displayed without an icon rather than being omitted.
+.profile.github .icon {
+    .brand-icon-mixin("\f09b");
+}
+
+.profile.linkedin .icon {
+    .brand-icon-mixin("\f08c");
+}
+
+.profile.codestats .icon {
+    .solid-icon-mixin("\f11c");
+}
+
+// ----------------------------------------------------------------------
+// |  Screen
+// ----------------------------------------------------------------------
+
+// A narrow display has less room than the banner and the rail are separated from its edges by.
+@media screen and (max-width: 767.98px) {
+    body {
+        padding: 0;
+    }
+
+    .banner-sections-mixin({
+            padding-left: 1.25rem;
+            padding-right: 1.25rem;
+        });
+
+    .body-sections-mixin({
+            padding-left: 1.25rem;
+            padding-right: 1.25rem;
+        });
+
+    .basics .name {
+        font-size: 1.9rem;
+    }
+}
+
+// ----------------------------------------------------------------------
+// |  Print
+// ----------------------------------------------------------------------
+@media print {
+    @page {
+        size: auto;
+        margin: .5in 0in;
+    }
+
+    body {
+        font-size: .78em;
+        padding: 0;
+        background-color: @surface-color;
+    }
+
+    #resume {
+        max-width: none;
+        box-shadow: none;
+
+        // A browser omits background colors when printing unless it is asked not to adjust them;
+        // without this, the banner is printed only when the person printing has enabled background
+        // graphics.
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    // A heading is not worth printing at the bottom of a page. Entries are allowed to break, as
+    // keeping one whole costs the remainder of the page that it would not fit on -- and vertical
+    // space is the resource that determines how many pages are printed.
+    .section-header {
+        break-after: avoid;
+    }
+
+    // Vertical space is the resource that determines how many pages are printed.
+    .spacing-mixin(1.1rem);
+
+    .about {
+        margin-top: 1.5rem;
+    }
+
+    // The banner introduces the content rather than being the content, so it is the first thing that
+    // gives up the space that it occupies on a printed page.
+    .basics {
+        padding-top: 1.25rem;
+
+        .picture img {
+            width: 4rem;
+            height: 4rem;
+        }
+
+        .name {
+            font-size: 1.9rem;
+            margin-top: .25rem;
+        }
+    }
+
+    .profiles {
+        padding-bottom: 1rem;
+    }
+}

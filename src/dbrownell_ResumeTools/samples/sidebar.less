@@ -1,0 +1,470 @@
+/* A second presentation of the markup that `standard.less` also styles.
+
+   Nothing here is coordinated with the generator: the same html produces a two-column resume with a
+   tinted sidebar, icons on the profiles alone, dates aligned to the right of the entry that they
+   qualify, and keywords displayed as a run of text rather than as badges. The class contract that
+   both stylesheets target is documented at the top of `standard.less`. */
+
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css");
+@import url("https://fonts.googleapis.com/css?family=Inter:400,600,700&display=swap");
+
+@sidebar-color: #1f2933;
+@sidebar-text-color: #e4e7eb;
+@sidebar-muted-color: #9aa5b1;
+@surface-color: white;
+@page-color: #e1e5ea;
+@text-color: #1f2933;
+@muted-color: #616e7c;
+@accent-color: #cf5c36;
+@rule-color: #e1e5ea;
+
+@sidebar-width: 19rem;
+@gutter: 2.5rem;
+@sidebar-padding: 1.75rem;
+
+// An icon is content that this stylesheet provides rather than markup that the generator produces.
+.solid-icon-mixin(@glyph) {
+    &::before {
+        content: @glyph;
+        font-family: "Font Awesome 6 Free";
+        font-weight: 900;
+    }
+}
+
+.brand-icon-mixin(@glyph) {
+    &::before {
+        content: @glyph;
+        font-family: "Font Awesome 6 Brands";
+        font-weight: 400;
+    }
+}
+
+// The space that separates sections, expressed once so that a printed page can display the same
+// content more compactly without repeating the selectors that position it.
+.spacing-mixin(@gap) {
+    .section {
+        margin-bottom: @gap;
+    }
+
+    .entry+.entry {
+        margin-top: @gap * .75;
+    }
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: "Inter", -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: .95em;
+    line-height: 1.5;
+    color: @text-color;
+    background-color: @page-color;
+    padding: 2rem 1rem;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+ul {
+    margin: 0;
+    padding-left: 1.1em;
+}
+
+// ----------------------------------------------------------------------
+// |  Layout
+// ----------------------------------------------------------------------
+
+// The columns are independent of one another rather than sharing rows, so the sections that make up
+// the sidebar are taken out of flow and the remaining sections are indented past them. The tint
+// spans the full height of the document because it is painted by the document rather than by the
+// sections that sit on it.
+#resume {
+    max-width: 62rem;
+    margin: auto;
+    overflow: hidden;
+    background-color: @surface-color;
+    background-image: linear-gradient(to right,
+            @sidebar-color 0,
+            @sidebar-color @sidebar-width,
+            @surface-color @sidebar-width);
+    box-shadow: 0 2px 12px rgba(31, 41, 51, .18);
+}
+
+// A float is never positioned above the point at which it appears in the flow, so a section moved
+// into the sidebar is pushed down to meet any longer section that precedes it in the markup. The
+// sidebar is therefore composed of the sections that the generator emits first; this is the one
+// decision that a two-column presentation cannot make on its own.
+.basics,
+.contact,
+.profiles,
+.skills {
+    float: left;
+    clear: left;
+    box-sizing: border-box;
+    width: @sidebar-width;
+    padding: 0 @sidebar-padding;
+    color: @sidebar-text-color;
+}
+
+.about,
+.work,
+.education,
+.volunteer,
+.awards,
+.publications,
+.languages,
+.interests,
+.references {
+    margin-left: @sidebar-width + @gutter;
+    padding-right: @gutter;
+}
+
+.spacing-mixin(2rem);
+
+// The first section within each column is separated from the top of the document rather than from
+// the section that precedes it.
+.basics {
+    padding-top: @sidebar-padding;
+}
+
+.about {
+    padding-top: 2.5rem;
+}
+
+// ----------------------------------------------------------------------
+// |  Headings
+// ----------------------------------------------------------------------
+
+// A heading is introduced by its own text rather than by an icon; a profile is the one value that
+// its network's mark identifies faster than its name does.
+.icon {
+    display: none;
+}
+
+.profile .icon {
+    display: inline-block;
+
+    // The width is fixed so that the usernames align with one another whether or not this
+    // stylesheet has a mark for the network that precedes them.
+    width: 1.4em;
+    color: @sidebar-muted-color;
+}
+
+.profile.github .icon {
+    .brand-icon-mixin("\f09b");
+}
+
+.profile.linkedin .icon {
+    .brand-icon-mixin("\f08c");
+}
+
+.profile.codestats .icon {
+    .solid-icon-mixin("\f11c");
+}
+
+.heading {
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    font-size: .72rem;
+    font-weight: 700;
+}
+
+.section-header {
+    margin-bottom: .6rem;
+}
+
+.about,
+.work,
+.education,
+.volunteer,
+.awards,
+.publications,
+.languages,
+.interests,
+.references {
+    .section-header {
+        color: @accent-color;
+        border-bottom: 1px solid @rule-color;
+        padding-bottom: .3rem;
+    }
+}
+
+.contact,
+.profiles,
+.skills {
+    .section-header {
+        color: @sidebar-muted-color;
+    }
+}
+
+// ----------------------------------------------------------------------
+// |  Basics
+// ----------------------------------------------------------------------
+.basics {
+    .picture img {
+        width: 100%;
+        aspect-ratio: 1;
+        object-fit: cover;
+        border-radius: 2px;
+        margin-bottom: 1rem;
+    }
+
+    .name {
+        font-size: 1.7rem;
+        font-weight: 700;
+        line-height: 1.15;
+    }
+
+    .label {
+        color: @sidebar-muted-color;
+        font-size: .85rem;
+        margin-top: .25rem;
+    }
+}
+
+// ----------------------------------------------------------------------
+// |  Details
+// ----------------------------------------------------------------------
+
+// A detail within the sidebar is displayed on a line of its own rather than beside the ones that
+// surround it; a language is short enough to share a line with the languages that follow it.
+.contact .detail,
+.profiles .detail {
+    display: block;
+    margin-bottom: .3rem;
+}
+
+.languages .detail {
+    display: inline-block;
+    margin-right: 1.5rem;
+}
+
+.detail {
+    font-size: .82rem;
+    overflow-wrap: break-word;
+}
+
+// The values within these details are displayed as flex items so that the line breaks between them
+// in the markup are not displayed as spaces that would precede the separator.
+.location .value,
+.language .value {
+    display: inline-flex;
+}
+
+.location .region::before,
+.location .countryCode::before {
+    content: ",\00a0";
+}
+
+// The fluency qualifies the language rather than parenthesizing it. The spaces are escaped so that
+// they survive compression.
+.fluency {
+    color: @muted-color;
+
+    &::before {
+        content: "\00a0\2014\00a0";
+    }
+}
+
+// ----------------------------------------------------------------------
+// |  Skills and Interests
+// ----------------------------------------------------------------------
+
+// The keywords of a skill or interest are read as a run of text rather than as separate badges.
+.skills,
+.interests {
+    .entry+.entry {
+        margin-top: .75rem;
+    }
+
+    .entry-header .name {
+        font-weight: 600;
+        font-size: .85rem;
+    }
+
+    .keywords {
+        list-style: none;
+        padding: 0;
+        font-size: .8rem;
+    }
+
+    .keyword {
+        display: inline;
+        color: @muted-color;
+
+        // The separator precedes the keyword rather than follows it, so the run does not end with
+        // one. The spaces are escaped so that they survive compression.
+        &+.keyword::before {
+            content: "\00a0\00b7\00a0";
+        }
+    }
+}
+
+.skills .keyword {
+    color: @sidebar-muted-color;
+}
+
+// ----------------------------------------------------------------------
+// |  Entries
+// ----------------------------------------------------------------------
+
+// The value that names the entry takes the space that the dates do not, which aligns the dates to
+// the right of the entry that they qualify.
+.entry-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+
+    >:first-child {
+        flex: 1 1 auto;
+        font-weight: 700;
+    }
+}
+
+.startDate,
+.endDate,
+.date,
+.releaseDate {
+    flex: 0 0 auto;
+    font-size: .78rem;
+    color: @muted-color;
+    letter-spacing: .03em;
+}
+
+.startDate::after {
+    content: "\00a0\2013\00a0";
+}
+
+// The value that names an entry within a section, whatever the schema calls it.
+.position,
+.studyType,
+.awards .title,
+.publications .name {
+    color: @accent-color;
+    font-weight: 600;
+    font-size: .88rem;
+}
+
+.area,
+.courses {
+    color: @muted-color;
+    font-size: .82rem;
+}
+
+.gpa {
+    color: @muted-color;
+    font-size: .82rem;
+
+    &::before {
+        content: "GPA\00a0";
+    }
+}
+
+.summary,
+.highlights {
+    margin-top: .2rem;
+}
+
+.highlights li {
+    margin-bottom: .1rem;
+}
+
+.references .reference {
+    color: @muted-color;
+}
+
+// ----------------------------------------------------------------------
+// |  Screen
+// ----------------------------------------------------------------------
+
+// A narrow display cannot show two columns, so the sidebar becomes the first of two stacked
+// sections and the tint that distinguishes it is painted by those sections themselves.
+@media screen and (max-width: 767.98px) {
+    body {
+        padding: 0;
+    }
+
+    #resume {
+        background-image: none;
+    }
+
+    .basics,
+    .contact,
+    .profiles,
+    .skills {
+        float: none;
+        width: auto;
+        background-color: @sidebar-color;
+        margin-bottom: 0;
+        padding-top: .75rem;
+        padding-bottom: .75rem;
+    }
+
+    .about,
+    .work,
+    .education,
+    .volunteer,
+    .awards,
+    .publications,
+    .languages,
+    .interests,
+    .references {
+        margin-left: 0;
+        padding: 0 @sidebar-padding;
+    }
+
+    .about {
+        padding-top: 1.5rem;
+    }
+
+    .basics .picture img {
+        width: 8rem;
+    }
+}
+
+// ----------------------------------------------------------------------
+// |  Print
+// ----------------------------------------------------------------------
+@media print {
+    @page {
+        size: auto;
+        margin: .5in 0in;
+    }
+
+    body {
+        font-size: .78em;
+        padding: 0;
+        background-color: @surface-color;
+    }
+
+    #resume {
+        max-width: none;
+        box-shadow: none;
+
+        // A browser omits background colors when printing unless it is asked not to adjust them;
+        // without this, the sidebar is printed only when the person printing has enabled background
+        // graphics.
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    // A heading is not worth printing at the bottom of a page. Entries are allowed to break, as
+    // keeping one whole costs the remainder of the page that it would not fit on -- and vertical
+    // space is the resource that determines how many pages are printed.
+    .section-header {
+        break-after: avoid;
+    }
+
+    // Vertical space is the resource that determines how many pages are printed.
+    .spacing-mixin(1.2rem);
+}

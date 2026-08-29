@@ -13,18 +13,24 @@ from markdown_it import MarkdownIt
 from dbrownell_ResumeTools.lib.json_resume_schema import ResumeData
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Sequence
     from datetime import date as Date  # noqa: N812
     from pathlib import Path
 
     from dbrownell_Common.Streams.DoneManager import DoneManager
 
     from dbrownell_ResumeTools.lib.json_resume_schema import (
+        Award,
         Basics,
         Education,
+        Interest,
+        Language,
         Location,
         Profile,
+        Publication,
+        Reference,
         Skill,
+        Volunteer,
         Work,
     )
 
@@ -124,9 +130,6 @@ def _CreateContent(data: ResumeData) -> tuple[str, list[str]]:
     content = _Element("div", classes="container-fluid", attributes={"id": "content"})
 
     content.Append(_CreateTitleRow(data.basics, rejected_uris))
-
-    # TODO: data.basics.label
-
     content.Append(_CreateContactRow(data.basics, rejected_uris))
 
     if data.basics.profiles:
@@ -136,15 +139,57 @@ def _CreateContent(data: ResumeData) -> tuple[str, list[str]]:
         content.Append(_CreateAboutRow(data.basics.summary))
 
     if data.skills:
-        content.Append(_CreateSkillRows(data.skills))
+        content.Append(
+            _CreateKeywordRows(
+                data.skills, item_class="skill", icon_classes="fas fa-lg fa-code", title="Skills"
+            ),
+        )
 
     if data.work:
-        content.Append(_CreateWorkRows(data.work, rejected_uris))
+        content.Append(
+            _CreateExperienceRows(
+                data.work,
+                rejected_uris,
+                name_attribute="company",
+                item_class="experience",
+                icon_classes="fas fa-lg fa-pen-square",
+                title="Work Experience",
+            ),
+        )
 
     if data.education:
         content.Append(_CreateEducationRows(data.education))
 
-    # TODO: Display volunteer, awards, publications, languages, interests, and references content.
+    if data.volunteer:
+        content.Append(
+            _CreateExperienceRows(
+                data.volunteer,
+                rejected_uris,
+                name_attribute="organization",
+                item_class="volunteer",
+                icon_classes="fas fa-lg fa-handshake-angle",
+                title="Volunteer Experience",
+            ),
+        )
+
+    if data.awards:
+        content.Append(_CreateAwardRows(data.awards))
+
+    if data.publications:
+        content.Append(_CreatePublicationRows(data.publications, rejected_uris))
+
+    if data.languages:
+        content.Append(_CreateLanguagesRow(data.languages))
+
+    if data.interests:
+        content.Append(
+            _CreateKeywordRows(
+                data.interests, item_class="interest", icon_classes="fas fa-lg fa-heart", title="Interests"
+            ),
+        )
+
+    if data.references:
+        content.Append(_CreateReferenceRows(data.references))
 
     # Every link opens in a new tab; this includes the links produced when rendering markdown content.
     return _ANCHOR_REGEX.sub(r'<a\1 target="_blank">', content.ToString()), rejected_uris
@@ -352,6 +397,25 @@ def _CreateInlineContainer(*details: _Element) -> _Element:
 
 
 # ----------------------------------------------------------------------
+def _CreateBulletList(classes: str, values: list[str]) -> _Element:
+    """Create the list that displays the values associated with a single entry."""
+
+    return _Element("ul", classes=classes).Append(
+        _Element("li").Html(_md.renderInline(value)) for value in values
+    )
+
+
+# ----------------------------------------------------------------------
+def _CreateLinkedText(text: str, uri: str | None) -> _Element:
+    """Create the div that displays `text`, linked to `uri` when one is available."""
+
+    if not uri:
+        return _Element("div").Text(text)
+
+    return _Element("div").Append(_Element("a", attributes={"href": uri, "alt": text}).Text(text))
+
+
+# ----------------------------------------------------------------------
 # |
 # |  Title
 # |
@@ -369,12 +433,15 @@ def _CreateTitleRow(basics: Basics, rejected_uris: list[str]) -> _Element:
     else:
         picture = _Element("div")
 
+    name = _Element("div", classes=f"{_SECTION_CONTENT_CLASSES} name").Html(_md.render(basics.name))
+
+    if basics.label:
+        name.Append(_Element("div", classes="label").Html(_md.renderInline(basics.label)))
+
     return (
         _Element("div", classes="row title")
         .Append(_Element("div", classes=f"{_SECTION_HEADER_CLASSES} picture").Append(picture))
-        .Append(
-            _Element("div", classes=f"{_SECTION_CONTENT_CLASSES} name").Html(_md.render(basics.name)),
-        )
+        .Append(name)
     )
 
 
@@ -557,37 +624,47 @@ def _CreateAboutRow(summary: str) -> _Element:
 
 # ----------------------------------------------------------------------
 # |
-# |  Skills
+# |  Skills and Interests
 # |
 # ----------------------------------------------------------------------
-def _CreateSkillRows(skills: list[Skill]) -> list[_Element]:
-    """Create the rows that display skills."""
+def _CreateKeywordRows(
+    items: Sequence[Skill | Interest],
+    *,
+    item_class: str,
+    icon_classes: str,
+    title: str,
+) -> list[_Element]:
+    """Create the rows that display a named collection of keywords.
 
-    rows = [_CreateSectionRow("row skills", _LINE_HEADER_CLASSES, "fas fa-lg fa-code", "Skills")]
+    Skills and interests are displayed in the same way; `keyword_list` is the class that the
+    stylesheet targets when it styles both of them.
+    """
+
+    rows = [_CreateSectionRow(f"row {item_class}s", _LINE_HEADER_CLASSES, icon_classes, title)]
 
     rows += [
-        _Element("div", classes="row line_item skill")
+        _Element("div", classes=f"row line_item keyword_list {item_class}")
         .Append(
             _Element("div", classes=_SUBSECTION_HEADER_CLASSES.replace("col-3", "col-5")).Append(
-                _Element("div", classes="name").Html(_md.renderInline(skill.name)),
+                _Element("div", classes="name").Html(_md.renderInline(item.name)),
             ),
         )
         .Append(
             _Element("div", classes=_SUBSECTION_CONTENT_CLASSES).Append(
                 _Element("div", classes="keywords").Append(
-                    _CreateSkillKeyword(keyword) for keyword in skill.keywords
+                    _CreateKeywordBadge(keyword) for keyword in item.keywords
                 ),
             ),
         )
-        for skill in skills
+        for item in items
     ]
 
     return rows
 
 
 # ----------------------------------------------------------------------
-def _CreateSkillKeyword(keyword: str) -> _Element:
-    """Create the badge that displays a single skill keyword."""
+def _CreateKeywordBadge(keyword: str) -> _Element:
+    """Create the badge that displays a single keyword."""
 
     content = _md.renderInline(keyword)
 
@@ -633,38 +710,46 @@ def _AddClasses(content: str, match: re.Match[str], classes: str) -> str:
 
 # ----------------------------------------------------------------------
 # |
-# |  Work Experience
+# |  Work and Volunteer Experience
 # |
 # ----------------------------------------------------------------------
-def _CreateWorkRows(work: list[Work], rejected_uris: list[str]) -> list[_Element]:
-    """Create the rows that display work experience."""
+def _CreateExperienceRows(
+    experiences: Sequence[Work | Volunteer],
+    rejected_uris: list[str],
+    *,
+    name_attribute: str,
+    item_class: str,
+    icon_classes: str,
+    title: str,
+) -> list[_Element]:
+    """Create the rows that display experience.
 
-    rows = [
-        _CreateSectionRow(
-            "row experiences", _LINE_HEADER_CLASSES, "fas fa-lg fa-pen-square", "Work Experience"
-        ),
-    ]
+    Work and volunteer experience differ only by the attribute that names the entity involved, which
+    is also the class that the stylesheet targets when it styles that name.
+    """
 
-    for experience in work:
-        website = _SafeUri(experience.website, rejected_uris)
+    rows = [_CreateSectionRow(f"row {item_class}s", _LINE_HEADER_CLASSES, icon_classes, title)]
 
-        if website:
-            company: _Element = _Element("div").Append(
-                _Element(
-                    "a",
-                    attributes={"href": website, "alt": experience.company},
-                ).Text(experience.company),
-            )
-        else:
-            company = _Element("div").Text(experience.company)
+    for experience in experiences:
+        content = (
+            _Element("div", classes=_SUBSECTION_CONTENT_CLASSES)
+            .Append(_Element("div", classes="position").Html(_md.renderInline(experience.position)))
+            .Append(_Element("div", classes="summary").Html(_md.render(experience.summary)))
+        )
 
-        company.AddClass("company")
+        if experience.highlights:
+            content.Append(_CreateBulletList("highlights", experience.highlights))
 
         rows.append(
-            _Element("div", classes="row line_item experience")
+            _Element("div", classes=f"row line_item {item_class}")
             .Append(
                 _Element("div", classes=_SUBSECTION_HEADER_CLASSES)
-                .Append(company)
+                .Append(
+                    _CreateLinkedText(
+                        getattr(experience, name_attribute),
+                        _SafeUri(experience.website, rejected_uris),
+                    ).AddClass(name_attribute),
+                )
                 .Append(_Element("div", classes="startDate").Text(_ToDateString(experience.startDate)))
                 .Append(
                     _Element("div", classes="endDate").Text(
@@ -672,12 +757,7 @@ def _CreateWorkRows(work: list[Work], rejected_uris: list[str]) -> list[_Element
                     ),
                 ),
             )
-            .Append(
-                _Element("div", classes=_SUBSECTION_CONTENT_CLASSES)
-                .Append(_Element("div", classes="position").Html(_md.renderInline(experience.position)))
-                .Append(_Element("div", classes="summary").Html(_md.render(experience.summary))),
-            ),
-            # TODO: experience.highlights
+            .Append(content),
         )
 
     return rows
@@ -695,25 +775,144 @@ def _CreateEducationRows(education: list[Education]) -> list[_Element]:
         _CreateSectionRow("row educations", _LINE_HEADER_CLASSES, "fas fa-lg fa-graduation-cap", "Education"),
     ]
 
+    for item in education:
+        content = (
+            _Element("div", classes=_SUBSECTION_CONTENT_CLASSES)
+            .Append(_Element("div", classes="studyType").Html(_md.renderInline(item.studyType)))
+            .Append(_Element("div", classes="area").Html(_md.renderInline(item.area)))
+        )
+
+        if item.gpa:
+            # The value is displayed without the label that introduces it; the stylesheet provides it.
+            content.Append(_Element("div", classes="gpa").Text(item.gpa))
+
+        if item.courses:
+            content.Append(_CreateBulletList("courses", item.courses))
+
+        rows.append(
+            _Element("div", classes="row line_item education")
+            .Append(
+                _Element("div", classes=_SUBSECTION_HEADER_CLASSES)
+                .Append(_Element("div", classes="institution").Html(_md.renderInline(item.institution)))
+                .Append(
+                    _Element("div", classes="endDate").Text(
+                        _ToDateString(item.endDate) if item.endDate else "",
+                    ),
+                ),
+            )
+            .Append(content),
+        )
+
+    return rows
+
+
+# ----------------------------------------------------------------------
+# |
+# |  Awards
+# |
+# ----------------------------------------------------------------------
+def _CreateAwardRows(awards: list[Award]) -> list[_Element]:
+    """Create the rows that display awards."""
+
+    rows = [_CreateSectionRow("row awards", _LINE_HEADER_CLASSES, "fas fa-lg fa-trophy", "Awards")]
+
     rows += [
-        _Element("div", classes="row line_item education")
+        _Element("div", classes="row line_item award")
         .Append(
             _Element("div", classes=_SUBSECTION_HEADER_CLASSES)
-            .Append(_Element("div", classes="institution").Html(_md.renderInline(item.institution)))
-            .Append(
-                _Element("div", classes="endDate").Text(
-                    _ToDateString(item.endDate) if item.endDate else "",
-                ),
-            ),
+            .Append(_Element("div", classes="awarder").Html(_md.renderInline(item.awarder)))
+            .Append(_Element("div", classes="date").Text(_ToDateString(item.date))),
         )
         .Append(
             _Element("div", classes=_SUBSECTION_CONTENT_CLASSES)
-            .Append(_Element("div", classes="studyType").Html(_md.renderInline(item.studyType)))
-            .Append(_Element("div", classes="area").Html(_md.renderInline(item.area))),
+            .Append(_Element("div", classes="title").Html(_md.renderInline(item.title)))
+            .Append(_Element("div", classes="summary").Html(_md.render(item.summary))),
         )
-        # TODO: item.gpa
-        # TODO: item.courses
-        for item in education
+        for item in awards
+    ]
+
+    return rows
+
+
+# ----------------------------------------------------------------------
+# |
+# |  Publications
+# |
+# ----------------------------------------------------------------------
+def _CreatePublicationRows(publications: list[Publication], rejected_uris: list[str]) -> list[_Element]:
+    """Create the rows that display publications."""
+
+    rows = [
+        _CreateSectionRow("row publications", _LINE_HEADER_CLASSES, "fas fa-lg fa-book", "Publications"),
+    ]
+
+    rows += [
+        _Element("div", classes="row line_item publication")
+        .Append(
+            _Element("div", classes=_SUBSECTION_HEADER_CLASSES)
+            .Append(_Element("div", classes="publisher").Html(_md.renderInline(item.publisher)))
+            .Append(_Element("div", classes="releaseDate").Text(_ToDateString(item.releaseDate))),
+        )
+        .Append(
+            _Element("div", classes=_SUBSECTION_CONTENT_CLASSES)
+            .Append(_CreateLinkedText(item.name, _SafeUri(item.website, rejected_uris)).AddClass("name"))
+            .Append(_Element("div", classes="summary").Html(_md.render(item.summary))),
+        )
+        for item in publications
+    ]
+
+    return rows
+
+
+# ----------------------------------------------------------------------
+# |
+# |  Languages
+# |
+# ----------------------------------------------------------------------
+def _CreateLanguagesRow(languages: list[Language]) -> _Element:
+    """Create the row that displays languages."""
+
+    return _CreateSectionRow(
+        "row languages", _SECTION_HEADER_CLASSES, "fas fa-lg fa-language", "Languages"
+    ).Append(
+        _Element("div", classes=_SECTION_CONTENT_CLASSES).Append(
+            _CreateInlineContainer(
+                *(
+                    _Element("div", classes="detail col")
+                    .Append(_Element("div", classes="language").Html(_md.renderInline(item.language)))
+                    .Append(_Element("div", classes="fluency").Html(_md.renderInline(item.fluency)))
+                    for item in languages
+                ),
+            ),
+        ),
+    )
+
+
+# ----------------------------------------------------------------------
+# |
+# |  References
+# |
+# ----------------------------------------------------------------------
+def _CreateReferenceRows(references: list[Reference]) -> list[_Element]:
+    """Create the rows that display references."""
+
+    rows = [
+        _CreateSectionRow("row references", _LINE_HEADER_CLASSES, "fas fa-lg fa-quote-left", "References"),
+    ]
+
+    rows += [
+        _Element("div", classes="row line_item reference")
+        .Append(
+            _Element("div", classes=_SUBSECTION_HEADER_CLASSES).Append(
+                _Element("div", classes="name").Html(_md.renderInline(item.name)),
+            ),
+        )
+        .Append(
+            _Element("div", classes=_SUBSECTION_CONTENT_CLASSES).Html(
+                _md.render(item.reference) if item.reference else "",
+            ),
+        )
+        for item in references
     ]
 
     return rows

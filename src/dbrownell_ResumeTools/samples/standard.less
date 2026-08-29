@@ -90,6 +90,13 @@ a {
     }
 }
 
+// Lists are introduced by the content itself (highlights and courses) and by rendered markdown.
+// Bootstrap indents them by more than the space that this layout has to give.
+ul {
+    padding-left: 1.25em;
+    margin-bottom: 0;
+}
+
 #content {
     margin: auto;
     display: block;
@@ -119,7 +126,7 @@ a {
         color: @accent-color;
     }
 
-    // Skills are the exception to this alignment.
+    // Keyword lists are the exception to this alignment.
     &.subsection {
         text-align: center;
         padding-bottom: .25rem;
@@ -198,6 +205,15 @@ a {
     line-height: 1.15;
     color: @accent-color;
     margin: auto;
+
+    // The label is displayed beneath the name, whose size it does not share; its own size is
+    // expressed relative to that one.
+    .label {
+        display: block;
+        font-size: .32em;
+        font-weight: normal;
+        color: @muted-color;
+    }
 }
 
 .container-fluid {
@@ -239,8 +255,11 @@ a {
     }
 }
 
+// The value that names an entry within a section, whatever the schema calls it.
 .position,
-.studyType {
+.studyType,
+.award .title,
+.publication .name {
     .special-text-mixin();
 
     font-size: 1.15em;
@@ -249,6 +268,35 @@ a {
 
 .area {
     color: @muted-color;
+}
+
+// A highlight or course qualifies the entry that precedes it rather than introducing a list of its
+// own, so it is not separated from that entry by a full line.
+.highlights,
+.courses {
+    margin-top: .3rem;
+}
+
+.courses {
+    font-size: .85em;
+    color: @muted-color;
+}
+
+.gpa {
+    display: block;
+    font-size: .85em;
+    color: @muted-color;
+
+    // The markup provides the value; the label that introduces it is presentation. The space is
+    // escaped so that it survives compression.
+    &::before {
+        content: "GPA\00a0";
+    }
+}
+
+// A reference is a quotation.
+.reference .content {
+    font-style: italic;
 }
 
 .location {
@@ -267,13 +315,34 @@ a {
     }
 }
 
-.skill.line_item {
-    // A skill is a single word or phrase rather than a sentence, so everything within one is
+.languages .detail {
+    // The values are displayed as flex items so that the line break between them in the markup is
+    // not displayed as a space that would precede the separator.
+    display: flex;
+}
+
+.fluency {
+    color: @muted-color;
+
+    // The fluency qualifies the language that precedes it. The space is escaped so that it survives
+    // compression.
+    &::before {
+        content: "\00a0(";
+    }
+
+    &::after {
+        content: ")";
+    }
+}
+
+// Skills and interests.
+.keyword_list.line_item {
+    // A keyword is a single word or phrase rather than a sentence, so everything within one is
     // displayed at a smaller size than the rest of the content. The sizes that a name and a badge
     // are otherwise displayed at are replaced by this one.
     font-size: .82em;
 
-    // A skill name is displayed on one line whenever it can be, so it is given more room than the
+    // A name is displayed on one line whenever it can be, so it is given more room than the
     // headers that introduce several values.
     .header.subsection {
         flex: 0 0 33.33%;
@@ -334,7 +403,9 @@ a {
 }
 
 .startDate,
-.endDate {
+.endDate,
+.date,
+.releaseDate {
     font-size: .85em;
     font-weight: normal;
     color: @muted-color;
@@ -354,12 +425,12 @@ a {
         padding: 1.5rem;
     }
 
-    // The skill header is listed as well, as the width that it is displayed with is not the one that
-    // its column would otherwise provide.
+    // The keyword list header is listed as well, as the width that it is displayed with is not the
+    // one that its column would otherwise provide.
     .row .col-3,
     .row .col-5,
     .row .col-6,
-    .skill.line_item .header.subsection {
+    .keyword_list.line_item .header.subsection {
         flex: 0 0 100%;
         max-width: 100%;
     }
@@ -371,6 +442,11 @@ a {
     .picture+.name {
         font-size: 2.25em;
         text-align: center;
+
+        // The size is expressed relative to the name, which is displayed at a smaller size here.
+        .label {
+            font-size: .42em;
+        }
     }
 
     .container-fluid.inline .col {
@@ -433,7 +509,7 @@ a {
     }
 
     // A filled badge consumes a large amount of ink.
-    .skill.line_item {
+    .keyword_list.line_item {
         .item .badge-primary {
 
             &.link,

@@ -22,7 +22,7 @@ _PACKAGE_DIR = Path(json_resume_schema.__file__).parent.parent
 THEMES_DIR = _PACKAGE_DIR / "themes"
 SAMPLES_DIR = _PACKAGE_DIR / "samples"
 
-ALL_THEME_STEMS = ["standard", "sidebar", "timeline", "minimal"]
+ALL_THEME_STEMS = ["standard", "sidebar", "timeline", "minimal", "modernist", "brutalist"]
 
 SAMPLE_FILENAME = SAMPLES_DIR / "resume.json"
 

@@ -1,0 +1,625 @@
+/* A fifth presentation of the markup that `standard.less` also styles.
+
+   Nothing here is coordinated with the generator: the same html produces a resume drawn as raw
+   structure -- heavy black rules, hard edges, offset block shadows, and a single safety-yellow
+   accent -- with every section numbered and every short value introduced by a chip rather than an
+   icon. The class contract that these stylesheets target is documented at the top of
+   `standard.less`. */
+
+@import url("https://fonts.googleapis.com/css?family=Archivo+Black|Space+Grotesk:400,500,700|Space+Mono:400,700&display=swap");
+
+@ink-color: #0a0a0a;
+@paper-color: white;
+@accent-color: #ffe600;
+@muted-color: #4a4a4a;
+
+// The two weights of rule that draw everything: the heavy one separates sections, the light one
+// separates what a section contains.
+@rule: 4px solid @ink-color;
+@hair: 2px solid @ink-color;
+
+@shadow-offset: 8px;
+@page-padding: 2rem;
+
+.display-text-mixin() {
+    font-family: "Archivo Black", "Space Grotesk", Impact, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: -.02em;
+}
+
+.mono-text-mixin() {
+    font-family: "Space Mono", ui-monospace, Consolas, monospace;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+
+// A chip is content that this stylesheet provides rather than markup that the generator produces,
+// so a detail that this stylesheet does not recognize is displayed without one (the icon that would
+// carry it is hidden by default).
+.chip-mixin(@text) {
+    display: inline-block;
+    background-color: @accent-color;
+    border: @hair;
+    padding: 0 .4em;
+    margin-right: .6em;
+    font-size: .65rem;
+
+    &::before {
+        content: @text;
+    }
+}
+
+// A link is marked by the accent drawn through it rather than by a color of its own, as nothing
+// here is colored.
+.marked-link-mixin(@depth) {
+    a {
+        box-shadow: inset 0 -@depth 0 @accent-color;
+    }
+}
+
+// The sections that introduce the person; they are displayed as one block above the numbered ones.
+.masthead-sections-mixin(@rules) {
+
+    .basics,
+    .contact,
+    .profiles,
+    .about {
+        @rules();
+    }
+}
+
+// Everything that the masthead does not display. These are the sections that are numbered.
+.body-sections-mixin(@rules) {
+
+    .skills,
+    .work,
+    .education,
+    .volunteer,
+    .awards,
+    .publications,
+    .languages,
+    .interests,
+    .references {
+        @rules();
+    }
+}
+
+// The sections whose entries describe a span of time; each is drawn as a slab lifted off the page.
+.slab-sections-mixin(@rules) {
+
+    .work,
+    .education,
+    .volunteer {
+        @rules();
+    }
+}
+
+// The sections whose entries are short enough to be displayed beside one another.
+.card-sections-mixin(@rules) {
+
+    .awards,
+    .publications,
+    .interests,
+    .references {
+        @rules();
+    }
+}
+
+// The sections composed of short values rather than of entries; each is read as a single run of
+// them rather than as a list.
+.detail-sections-mixin(@rules) {
+
+    .contact,
+    .profiles,
+    .languages {
+        @rules();
+    }
+}
+
+// The space that separates sections and entries, expressed once so that a printed page can display
+// the same content more compactly without repeating the selectors that position it.
+.spacing-mixin(@gap) {
+    .masthead-sections-mixin({
+            padding: @gap * .6 @page-padding;
+        });
+
+    .body-sections-mixin({
+            padding: @gap @page-padding;
+        });
+
+    .slab-sections-mixin({
+            .entry+.entry {
+                margin-top: @gap * .8;
+            }
+        });
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
+    font-size: .95em;
+    line-height: 1.5;
+    color: @ink-color;
+    background-color: @paper-color;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+// A marker is drawn as a hard square rather than provided by the list itself, as a round bullet is
+// the one shape that this presentation does not draw.
+ul:not(.keywords) {
+    list-style: none;
+    margin: .6rem 0 0 0;
+    padding: 0;
+
+    >li {
+        position: relative;
+        padding-left: 1.6rem;
+        margin-bottom: .4rem;
+
+        &::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: .45em;
+            width: .7em;
+            height: .7em;
+            background-color: @accent-color;
+            border: @hair;
+        }
+    }
+}
+
+#resume {
+    max-width: 56rem;
+    margin: auto;
+    border-left: @rule;
+    border-right: @rule;
+
+    // The section number is drawn by the stylesheet, so the sequence that produces it is kept here
+    // as well.
+    counter-reset: section;
+
+    // Rendered markdown begins and ends with a paragraph whose margins would otherwise be added to
+    // the space that separates one value from the next.
+    p:first-child {
+        margin-top: 0;
+    }
+
+    p:last-child {
+        margin-bottom: 0;
+    }
+}
+
+// The bar that labels the document as a whole, in the manner of a specification sheet.
+#resume::before {
+    .mono-text-mixin();
+
+    content: "Curriculum Vitae";
+    display: block;
+    background-color: @accent-color;
+    border-bottom: @hair;
+    padding: .5rem @page-padding;
+    font-size: .7rem;
+}
+
+.spacing-mixin(1.75rem);
+
+// ----------------------------------------------------------------------
+// |  Masthead
+// ----------------------------------------------------------------------
+
+// The sections that introduce the person are separated from one another by the light rule and from
+// the content that follows by the heavy one, which is drawn by the first numbered section.
+.contact,
+.profiles,
+.about {
+    border-top: @hair;
+}
+
+// The contact and profile details are read as a single run of values, so the rule that would
+// otherwise separate them is not drawn.
+.profiles {
+    border-top: none;
+    padding-top: 0;
+}
+
+.basics {
+    .picture img {
+        width: 6rem;
+        height: 6rem;
+        object-fit: cover;
+        border: @rule;
+        box-shadow: @shadow-offset @shadow-offset 0 @accent-color;
+        margin-bottom: 1.25rem;
+    }
+
+    .name {
+        .display-text-mixin();
+
+        // The name is the largest thing on the page and is set to the width available to it, which
+        // a display that is narrower than the document cannot be assumed to provide.
+        font-size: clamp(2.5rem, 9vw, 4.75rem);
+        line-height: .92;
+        word-break: break-word;
+    }
+
+    // The label is displayed as the negative of everything around it, which is the emphasis
+    // available to a presentation drawn in one color.
+    .label {
+        .mono-text-mixin();
+
+        display: inline-block;
+        background-color: @ink-color;
+        color: @paper-color;
+        padding: .35em .7em;
+        margin-top: 1rem;
+        font-size: .8rem;
+    }
+}
+
+.about .summary {
+    font-size: 1.15rem;
+    font-weight: 500;
+}
+
+// ----------------------------------------------------------------------
+// |  Headings
+// ----------------------------------------------------------------------
+
+// The masthead is identified by the name that it displays, so the headings that introduce its
+// sections are not displayed.
+.masthead-sections-mixin({
+        .section-header {
+            display: none;
+        }
+    });
+
+.section-header {
+    .display-text-mixin();
+
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+    font-size: clamp(1.4rem, 4vw, 2rem);
+    margin-bottom: 1.25rem;
+}
+
+// A section is numbered rather than decorated; the number occupies the element that another
+// stylesheet would display an icon in.
+.body-sections-mixin({
+        border-top: @rule;
+        counter-increment: section;
+
+        .section-header .icon {
+            .mono-text-mixin();
+
+            background-color: @accent-color;
+            border: @hair;
+            padding: .1em .4em;
+            font-size: .8rem;
+            letter-spacing: 0;
+
+            &::before {
+                content: counter(section, decimal-leading-zero);
+            }
+        }
+    });
+
+// ----------------------------------------------------------------------
+// |  Entries
+// ----------------------------------------------------------------------
+
+// A dated entry is drawn as a slab that is lifted off the page by a shadow with a hard edge; the
+// shadow is offset rather than blurred, as nothing here is drawn softly.
+.slab-sections-mixin({
+        .entry {
+            border: @hair;
+            box-shadow: @shadow-offset @shadow-offset 0 @ink-color;
+            padding: 1.1rem 1.25rem;
+        }
+    });
+
+// An entry that is not dated is short enough that several of them are displayed beside one another,
+// as many as the width available allows.
+.card-sections-mixin({
+        .section-body {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+            gap: 1.1rem;
+
+            // A card is drawn around what it contains rather than being stretched to the height of
+            // the card beside it, which would otherwise end in space that displays nothing.
+            align-items: start;
+        }
+
+        .entry {
+            border: @hair;
+            border-left: @rule;
+            padding: .9rem 1rem;
+        }
+    });
+
+// The value that names the entry takes the space that the dates do not, which aligns the dates to
+// the right of the entry that they qualify.
+.entry-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: .4rem 1rem;
+    border-bottom: @hair;
+    padding-bottom: .6rem;
+    margin-bottom: .75rem;
+
+    >:first-child {
+        .marked-link-mixin(.4em);
+
+        font-size: 1.25rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+}
+
+.startDate,
+.endDate,
+.date,
+.releaseDate {
+    .mono-text-mixin();
+
+    font-size: .7rem;
+    white-space: nowrap;
+}
+
+// The dates are displayed as a single range rather than as two values that are separated from one
+// another. The spaces are escaped so that they survive compression.
+.startDate::after {
+    content: "\00a0\2013\00a0";
+}
+
+// The value that names an entry within a section, whatever the schema calls it.
+.position,
+.studyType,
+.awards .title,
+.publications .name {
+    .mono-text-mixin();
+    .marked-link-mixin(.35em);
+
+    font-size: .8rem;
+}
+
+// The kind of degree and the field it was earned in are read as one value, so they are displayed on
+// one line; the separator precedes the field rather than following the kind, as a section that
+// displays only one of them would otherwise end in it.
+.studyType,
+.area {
+    display: inline;
+}
+
+.area::before,
+.fluency::before {
+    content: "\00a0//\00a0";
+}
+
+.area,
+.gpa,
+.references .reference {
+    color: @muted-color;
+}
+
+.gpa::before {
+    content: "GPA\00a0//\00a0";
+}
+
+// ----------------------------------------------------------------------
+// |  Details
+// ----------------------------------------------------------------------
+
+// The short values of a section are displayed beside one another and wrap as a line of text would.
+.detail-sections-mixin({
+        .section-body {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .6rem 1.5rem;
+        }
+    });
+
+.detail {
+    .mono-text-mixin();
+    .marked-link-mixin(.2em);
+
+    display: flex;
+    align-items: baseline;
+    font-size: .75rem;
+    overflow-wrap: anywhere;
+}
+
+// A language is a value rather than a piece of contact information, so it is boxed like a keyword
+// instead of being introduced by a chip.
+.language {
+    border: @hair;
+    padding: .25em .6em;
+}
+
+// The values within these details are displayed as flex items so that the line breaks between them
+// in the markup are not displayed as spaces that would precede the separator.
+.location .value,
+.language .value {
+    display: inline-flex;
+}
+
+// The separator precedes the value rather than follows it, as the region and country code are
+// omitted when they are not available; the city is always displayed.
+.location .region::before,
+.location .countryCode::before {
+    content: ",\00a0";
+}
+
+// ----------------------------------------------------------------------
+// |  Skills and Interests
+// ----------------------------------------------------------------------
+
+// The skills are displayed as the cells of a grid whose rules are shared between neighbors, which
+// is what the negative margin collapses.
+.skills .section-body {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+    gap: 0;
+    border: @hair;
+
+    .entry {
+        border: @hair;
+        margin: -1px;
+        padding: .9rem 1rem;
+    }
+}
+
+.skills .entry-header,
+.interests .entry-header {
+    >:first-child {
+        font-size: .95rem;
+    }
+}
+
+.keywords {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem;
+}
+
+.keyword {
+    .mono-text-mixin();
+
+    border: @hair;
+    padding: .15em .5em;
+    font-size: .65rem;
+}
+
+// ----------------------------------------------------------------------
+// |  Chips
+// ----------------------------------------------------------------------
+
+// A detail is introduced by the chip that names what it is; one that this stylesheet does not
+// recognize is displayed without a chip rather than with an empty one.
+.detail .icon {
+    display: none;
+}
+
+.email .icon {
+    .chip-mixin("Email");
+}
+
+.website .icon {
+    .chip-mixin("Web");
+}
+
+.phone .icon {
+    .chip-mixin("Tel");
+}
+
+.location .icon {
+    .chip-mixin("Loc");
+}
+
+.profile.github .icon {
+    .chip-mixin("GitHub");
+}
+
+.profile.linkedin .icon {
+    .chip-mixin("LinkedIn");
+}
+
+.profile.codestats .icon {
+    .chip-mixin("Code::Stats");
+}
+
+// ----------------------------------------------------------------------
+// |  Screen
+// ----------------------------------------------------------------------
+
+// A narrow display has less room than the page is separated from its edges by, and none to spare
+// for the shadow that a slab is lifted by.
+@media screen and (max-width: 767.98px) {
+    #resume {
+        border-left: none;
+        border-right: none;
+
+        &::before {
+            padding-left: 1.1rem;
+            padding-right: 1.1rem;
+        }
+    }
+
+    .masthead-sections-mixin({
+            padding-left: 1.1rem;
+            padding-right: 1.1rem;
+        });
+
+    .body-sections-mixin({
+            padding-left: 1.1rem;
+            padding-right: 1.1rem;
+        });
+
+    .slab-sections-mixin({
+            .entry {
+                box-shadow: none;
+            }
+        });
+}
+
+// ----------------------------------------------------------------------
+// |  Print
+// ----------------------------------------------------------------------
+@media print {
+    @page {
+        size: auto;
+        margin: .5in;
+    }
+
+    body {
+        font-size: .72em;
+    }
+
+    #resume {
+        max-width: none;
+        border: none;
+
+        // A browser omits background colors when printing unless it is asked not to adjust them;
+        // without this, the accent is printed only when the person printing has enabled background
+        // graphics.
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    // A heading is not worth printing at the bottom of a page. Entries are allowed to break, as
+    // keeping one whole costs the remainder of the page that it would not fit on -- and vertical
+    // space is the resource that determines how many pages are printed.
+    .section-header {
+        break-after: avoid;
+        margin-bottom: .8rem;
+    }
+
+    // Vertical space is the resource that determines how many pages are printed.
+    .spacing-mixin(1.1rem);
+
+    .basics .name {
+        font-size: 2.75rem;
+    }
+
+    .basics .picture img {
+        width: 4.5rem;
+        height: 4.5rem;
+    }
+}

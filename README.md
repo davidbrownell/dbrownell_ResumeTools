@@ -66,21 +66,25 @@ Print the displayed content to a pdf from the browser itself (`Ctrl+P` / `Cmd+P`
 ### Writing a stylesheet
 The generated html assigns a class to every value that names what the value is: the section that contains it (`work`, `education`, `skills`, ...), its role within that section (`section-header`, `entry`, `entry-body`, `detail`, ...), and the schema field that produced it (`position`, `startDate`, `gpa`, `keyword`, ...). Icons are empty `icon` elements that a stylesheet fills in through `::before`. That contract is documented in full at the top of [standard.less](https://github.com/davidbrownell/dbrownell_ResumeTools/blob/main/src/dbrownell_ResumeTools/themes/standard.less), and a stylesheet is free to lay those classes out however it likes.
 
-Four stylesheets are bundled to demonstrate the range. All of them are applied to the same `resume.json` and to the same generated html:
+Six stylesheets are bundled to demonstrate the range. All of them are applied to the same `resume.json` and to the same generated html:
 
 | Stylesheet | Presentation | Sample |
 | --- | --- | --- |
 | `standard.less` (and the `standard.css` it compiles to) | A single column with a serif display face, a tinted title, and keywords as badges. | [pdf](https://github.com/davidbrownell/dbrownell_ResumeTools/blob/main/docs/sample_resume_standard.pdf) |
+| `brutalist.less` | Heavy black rules, hard edges, and offset block shadows in one safety-yellow accent, with numbered sections and chips in place of icons. | [pdf](https://github.com/davidbrownell/dbrownell_ResumeTools/blob/main/docs/sample_resume_brutalist.pdf) |
+| `minimal.less` | Monochrome and monospaced, set in a nerd font whose glyphs replace the labels that would otherwise introduce a value. | [pdf](https://github.com/davidbrownell/dbrownell_ResumeTools/blob/main/docs/sample_resume_minimal.pdf) |
+| `modernist.less` | A geometric sans face, a tinted block attached to the margin by a heavy bar, entries as cards, and no icon anywhere. | [pdf](https://github.com/davidbrownell/dbrownell_ResumeTools/blob/main/docs/sample_resume_modernist.pdf) |
 | `sidebar.less` | Two columns with a dark sidebar, icons on the profiles alone, right-aligned dates, and keywords as a run of text. | [pdf](https://github.com/davidbrownell/dbrownell_ResumeTools/blob/main/docs/sample_resume_sidebar.pdf) |
 | `timeline.less` | A full-width banner, dated entries hung off a vertical rail, and keywords as tags. | [pdf](https://github.com/davidbrownell/dbrownell_ResumeTools/blob/main/docs/sample_resume_timeline.pdf) |
-| `minimal.less` | Monochrome and monospaced, set in a nerd font whose glyphs replace the labels that would otherwise introduce a value. | [pdf](https://github.com/davidbrownell/dbrownell_ResumeTools/blob/main/docs/sample_resume_minimal.pdf) |
 
 | | |
 | :---: | :---: |
-| <img src="https://raw.githubusercontent.com/davidbrownell/dbrownell_ResumeTools/main/docs/sample_resume_standard.png" alt="Sample resume generated from resume.json and standard.less" width="380" /> | <img src="https://raw.githubusercontent.com/davidbrownell/dbrownell_ResumeTools/main/docs/sample_resume_sidebar.png" alt="Sample resume generated from resume.json and sidebar.less" width="380" /> |
-| `standard.less` | `sidebar.less` |
-| <img src="https://raw.githubusercontent.com/davidbrownell/dbrownell_ResumeTools/main/docs/sample_resume_timeline.png" alt="Sample resume generated from resume.json and timeline.less" width="380" /> | <img src="https://raw.githubusercontent.com/davidbrownell/dbrownell_ResumeTools/main/docs/sample_resume_minimal.png" alt="Sample resume generated from resume.json and minimal.less" width="380" /> |
-| `timeline.less` | `minimal.less` |
+| <img src="https://raw.githubusercontent.com/davidbrownell/dbrownell_ResumeTools/main/docs/sample_resume_standard.png" alt="Sample resume generated from resume.json and standard.less" width="380" /> | <img src="https://raw.githubusercontent.com/davidbrownell/dbrownell_ResumeTools/main/docs/sample_resume_brutalist.png" alt="Sample resume generated from resume.json and brutalist.less" width="380" /> |
+| `standard.less` | `brutalist.less` |
+| <img src="https://raw.githubusercontent.com/davidbrownell/dbrownell_ResumeTools/main/docs/sample_resume_minimal.png" alt="Sample resume generated from resume.json and minimal.less" width="380" /> | <img src="https://raw.githubusercontent.com/davidbrownell/dbrownell_ResumeTools/main/docs/sample_resume_modernist.png" alt="Sample resume generated from resume.json and modernist.less" width="380" /> |
+| `minimal.less` | `modernist.less` |
+| <img src="https://raw.githubusercontent.com/davidbrownell/dbrownell_ResumeTools/main/docs/sample_resume_sidebar.png" alt="Sample resume generated from resume.json and sidebar.less" width="380" /> | <img src="https://raw.githubusercontent.com/davidbrownell/dbrownell_ResumeTools/main/docs/sample_resume_timeline.png" alt="Sample resume generated from resume.json and timeline.less" width="380" /> |
+| `sidebar.less` | `timeline.less` |
 
 <!-- Content below this delimiter will be copied to the generated README.md file. DO NOT REMOVE THIS COMMENT, as it will cause regeneration to fail. -->
 

@@ -1,0 +1,768 @@
+/* A fifth presentation of the markup that `standard.less` also styles.
+
+   Nothing here is coordinated with the generator: the same html produces a resume set in a
+   geometric sans face, introduced by a block that a heavy bar attaches to the margin, with every
+   entry displayed as a card whose edge a marker interrupts and no icon anywhere. The class contract
+   that these stylesheets target is documented at the top of `standard.less`. */
+
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap");
+
+// Every color is derived from this one, so changing it themes the entire stylesheet.
+@theme-color: #c71585;
+
+// ----------------------------------------------------------------------
+@theme-hue: hue(@theme-color);
+
+@accent-color: @theme-color;
+@accent-hover-color: darken(@theme-color, 8%);
+
+// Text takes the hue of the theme at a lightness of its own, so that it remains legible no matter
+// how light or dark the theme color is. The presentation distinguishes four kinds of text: what
+// names something, what describes it, what qualifies that description, and the dates that are read
+// only once the entry they belong to has been found.
+@text-color: hsl(@theme-hue, 12%, 12%);
+@body-color: hsl(@theme-hue, 12%, 34%);
+@muted-color: hsl(@theme-hue, 9%, 46%);
+@subtle-color: hsl(@theme-hue, 10%, 70%);
+
+// A card is displayed against the page rather than upon it, so the two are separated by a rule and
+// by a tint rather than by a shadow.
+@rule-color: hsl(@theme-hue, 13%, 91%);
+@surface-color: hsl(@theme-hue, 40%, 99%);
+@page-color: hsl(@theme-hue, 25%, 98%);
+
+// Fills are the theme color at the opacity that each of them calls for; a fill that competes with
+// the text displayed against it is a fill that makes the resume harder to read.
+@block-color: fade(@theme-color, 4%);
+@card-color: fade(@theme-color, 2%);
+@corner-color: fade(@theme-color, 8%);
+
+// The bar that attaches the block introducing the person to the margin, and the narrower one that
+// every card is attached by.
+@block-bar-width: .5rem;
+@card-bar-width: .25rem;
+
+// The marker that interrupts the edge of a card, centered on that edge.
+@marker-size: .5rem;
+
+@block-padding: 2.5rem;
+@card-padding: 2rem;
+
+// The fallback is used when the imported font is not available.
+.display-text-mixin() {
+    font-family: "Outfit", "Inter", -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    text-transform: uppercase;
+    font-weight: 800;
+
+    // A display size is set tighter than running text, which is what distinguishes the two at a
+    // glance more than the size itself does.
+    letter-spacing: -.03em;
+}
+
+// The text that qualifies a value rather than being one: a label, a date, or the name of a group.
+.qualifier-text-mixin() {
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: .06em;
+}
+
+// The wedge that decorates the upper right corner of a block. It is drawn by clipping a square
+// rather than by an image, so it is the theme color at whatever size it is displayed.
+.corner-mixin(@size) {
+    position: relative;
+    overflow: hidden;
+
+    &::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: @size;
+        height: @size;
+        background-color: @corner-color;
+        clip-path: polygon(100% 0, 100% 100%, 0 0);
+    }
+}
+
+// The sections that introduce the person; they are displayed against a single fill rather than one
+// of their own, so they are styled together.
+.block-sections-mixin(@rules) {
+
+    .basics,
+    .contact,
+    .profiles {
+        @rules();
+    }
+}
+
+// The sections whose entries record something that happened. Skills and interests are collections
+// of keywords rather than records, so they are displayed as groups instead of as cards.
+.record-sections-mixin(@rules) {
+
+    .work,
+    .education,
+    .volunteer,
+    .awards,
+    .publications,
+    .references {
+        @rules();
+    }
+}
+
+.keyword-sections-mixin(@rules) {
+
+    .skills,
+    .interests {
+        @rules();
+    }
+}
+
+// The name of the network that a profile belongs to. It is the one value that the markup does not
+// display, as the network is provided as a class rather than as content, so the presentation that
+// labels a profile provides that label itself.
+.network-label-mixin(@name) {
+    .icon {
+        .qualifier-text-mixin();
+
+        display: inline;
+        font-size: .75rem;
+        color: @subtle-color;
+        padding-right: .5em;
+
+        &::before {
+            content: @name;
+        }
+    }
+}
+
+// A list that the content provides rather than one that rendered markdown introduces; the marker is
+// a rule that repeats the geometry of the bars rather than a bullet.
+.dash-list-mixin() {
+    list-style: none;
+    padding-left: 0;
+
+    li {
+        position: relative;
+        padding-left: 1.5rem;
+
+        &::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: .7em;
+            width: .75rem;
+            height: 2px;
+            background-color: @accent-color;
+        }
+    }
+}
+
+// The space that separates sections and entries, expressed once so that a printed page can display
+// the same content more compactly without repeating the selectors that position it.
+.spacing-mixin(@gap) {
+    .section+.section {
+        margin-top: @gap;
+    }
+
+    // The sections that make up the block introducing the person are displayed against a single
+    // fill, which the space between them would interrupt.
+    .section+.contact,
+    .section+.profiles {
+        margin-top: 0;
+    }
+
+    .section-header {
+        margin-bottom: @gap * .6;
+    }
+
+    .record-sections-mixin({
+            .entry+.entry {
+                margin-top: @gap * .75;
+            }
+        });
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: "Outfit", "Inter", -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 1em;
+    line-height: 1.7;
+    color: @body-color;
+    background-color: @page-color;
+    padding: 3rem 2.5rem;
+}
+
+a {
+    color: @accent-color;
+    text-decoration: none;
+
+    &:hover,
+    &:focus {
+        color: @accent-hover-color;
+    }
+}
+
+ul {
+    margin: 0;
+    padding-left: 1.25em;
+}
+
+#resume {
+    max-width: 52.5rem;
+    margin: auto;
+
+    // Rendered markdown begins and ends with a paragraph whose margins would otherwise be added to
+    // the space that separates one value from the next.
+    p:first-child {
+        margin-top: 0;
+    }
+
+    p:last-child {
+        margin-bottom: 0;
+    }
+}
+
+.spacing-mixin(3rem);
+
+// Nothing is labeled by an icon; the values are distinguished by where they are displayed and by
+// the face that displays them.
+.icon {
+    display: none;
+}
+
+// A profile is labeled when this stylesheet recognizes the network; one that it does not recognize
+// is displayed as the username alone rather than being omitted.
+.profile.github {
+    .network-label-mixin("GitHub");
+}
+
+.profile.linkedin {
+    .network-label-mixin("LinkedIn");
+}
+
+.profile.codestats {
+    .network-label-mixin("Code::Stats");
+}
+
+// ----------------------------------------------------------------------
+// |  Block
+// ----------------------------------------------------------------------
+.block-sections-mixin({
+        background-color: @block-color;
+        border-left: @block-bar-width solid @accent-color;
+        padding-left: @block-padding;
+        padding-right: @block-padding;
+    });
+
+.basics {
+    .corner-mixin(7.5rem);
+
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: @card-padding;
+    align-items: center;
+    padding-top: @block-padding;
+
+    // A picture is displayed as it was provided rather than as a circle, which is the shape that
+    // everything else here is displayed as.
+    .picture {
+        grid-row: 1 / span 2;
+
+        img {
+            width: 6rem;
+            height: 6rem;
+            object-fit: cover;
+            display: block;
+        }
+    }
+
+    .name,
+    .label {
+        grid-column: 2;
+    }
+
+    .name {
+        .display-text-mixin();
+
+        font-size: 3.5rem;
+        line-height: 1.1;
+        letter-spacing: -.045em;
+        color: @text-color;
+    }
+
+    // The label qualifies the name that precedes it, so it is displayed as a qualifier rather than
+    // at a size that competes with it.
+    .label {
+        .qualifier-text-mixin();
+
+        font-size: .875rem;
+        color: @muted-color;
+    }
+}
+
+// The contact and profile details qualify the name rather than following it as sections of their
+// own, so the headings that would introduce them are not displayed.
+.contact,
+.profiles {
+    .section-header {
+        display: none;
+    }
+
+    .detail {
+        display: inline-flex;
+        margin-right: 1.5rem;
+    }
+
+    .value {
+        font-weight: 600;
+    }
+
+    // The underline is drawn rather than being the one that the browser provides, so that it can be
+    // drawn from nothing when the link is pointed at.
+    a {
+        position: relative;
+
+        &::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 0;
+            height: 2px;
+            background-color: @accent-color;
+            transition: width .3s ease;
+        }
+
+        &:hover::after {
+            width: 100%;
+        }
+    }
+}
+
+// The block is closed by the last of the sections that make it up; profiles are omitted when the
+// content does not provide any.
+.contact,
+.profiles {
+    padding-bottom: @block-padding;
+}
+
+.contact:has(+ .profiles) {
+    padding-bottom: 0;
+}
+
+// ----------------------------------------------------------------------
+// |  Headings
+// ----------------------------------------------------------------------
+
+// A heading is sized to the text that it introduces rather than to the width of the document, and
+// the rule beneath it is part of the heading rather than a divider that spans the page.
+.section-header {
+    .display-text-mixin();
+
+    position: relative;
+    display: inline-block;
+    min-width: 17.5rem;
+    font-size: 2rem;
+    line-height: 1.2;
+    color: @text-color;
+    padding-bottom: 1rem;
+    border-bottom: 3px solid @accent-color;
+
+    // The rule is continued past the heading by a mark that does not reach it, which is what keeps
+    // the heading from reading as a divider.
+    &::after {
+        content: "";
+        position: absolute;
+        right: -2.5rem;
+        bottom: -3px;
+        width: 2rem;
+        height: 3px;
+        background-color: @rule-color;
+    }
+}
+
+// Rendered markdown content may introduce headings.
+.section-body h2 {
+    .display-text-mixin();
+
+    font-size: 1.5rem;
+    color: @text-color;
+}
+
+// ----------------------------------------------------------------------
+// |  Entries
+// ----------------------------------------------------------------------
+.record-sections-mixin({
+        .entry {
+            position: relative;
+            background-color: @surface-color;
+            border-left: @card-bar-width solid @rule-color;
+            padding: @card-padding;
+            transition: border-left-color .3s ease;
+        }
+
+        // The marker interrupts the edge that the card is attached by, which is the one detail that
+        // distinguishes a card that is being read from the ones around it.
+        .entry::before {
+            content: "";
+            position: absolute;
+            top: @card-padding;
+            left: -@marker-size;
+            width: @marker-size;
+            height: @marker-size;
+            background-color: @accent-color;
+            clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+        }
+
+        .entry:hover {
+            border-left-color: @accent-color;
+        }
+    });
+
+// The value that names the entry takes the space that the dates do not, which aligns the dates to
+// the right of the entry that they qualify.
+.entry-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 1.5rem;
+
+    // The value that names the entry, whatever the schema calls it. The theme color is reserved for
+    // the value that follows it, so a name that links somewhere is not distinguished by being one.
+    >:first-child {
+        flex: 1 1 auto;
+        font-size: 1.375rem;
+        font-weight: 700;
+        line-height: 1.3;
+        letter-spacing: -.02em;
+        color: @text-color;
+    }
+
+    a {
+        color: inherit;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+}
+
+.startDate,
+.endDate,
+.date,
+.releaseDate {
+    .qualifier-text-mixin();
+
+    flex: 0 0 auto;
+    font-size: .8125rem;
+    color: @subtle-color;
+}
+
+// The dates are displayed as a single range rather than as two values that are separated from one
+// another. The spaces are escaped so that they survive compression.
+.startDate::after {
+    content: "\00a0\2013\00a0";
+}
+
+// The value that names an entry within a section, whatever the schema calls it. It is the only
+// value within a card displayed in the theme color, which is what leads the eye down the page.
+.position,
+.studyType,
+.awards .title,
+.publications .name {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: @accent-color;
+    margin-top: .25rem;
+}
+
+.area {
+    color: @muted-color;
+}
+
+.entry-body .summary {
+    margin-top: 1rem;
+}
+
+.about .summary {
+    font-size: 1.0625rem;
+
+    // Text is difficult to scan when a line spans the width of a large display, and a summary is
+    // the only content here that is displayed as prose.
+    max-width: 42.5rem;
+}
+
+// A highlight or course qualifies the entry that precedes it rather than introducing a list of its
+// own, so it is not separated from that entry by a full line.
+.highlights,
+.courses {
+    .dash-list-mixin();
+
+    margin-top: 1rem;
+
+    li+li {
+        margin-top: .75rem;
+    }
+}
+
+.courses,
+.gpa {
+    font-size: .9375rem;
+    color: @muted-color;
+}
+
+.gpa {
+    .qualifier-text-mixin();
+
+    font-size: .8125rem;
+
+    // The markup provides the value; the label that introduces it is presentation. The space is
+    // escaped so that it survives compression.
+    &::before {
+        content: "GPA\00a0";
+    }
+}
+
+.references .reference {
+    font-style: italic;
+}
+
+// ----------------------------------------------------------------------
+// |  Details
+// ----------------------------------------------------------------------
+.languages .detail {
+    display: inline-flex;
+    margin-right: 1.5rem;
+}
+
+// The values within these details are displayed as flex items so that the line breaks between them
+// in the markup are not displayed as spaces that would precede the separator.
+.location .value,
+.language .value {
+    display: inline-flex;
+}
+
+// The separator precedes the value rather than follows it, as the region and country code are
+// omitted when they are not available; the city is always displayed.
+.location .region::before,
+.location .countryCode::before {
+    content: ",\00a0";
+}
+
+.fluency {
+    color: @muted-color;
+
+    &::before {
+        content: "\00a0\2014\00a0";
+    }
+}
+
+// ----------------------------------------------------------------------
+// |  Skills and Interests
+// ----------------------------------------------------------------------
+
+// A group of keywords is short enough that several of them are displayed beside one another; the
+// number that fit is decided by the space available rather than by a column count.
+.keyword-sections-mixin({
+        .section-body {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(12.5rem, 1fr));
+            gap: 1rem;
+        }
+
+        .entry {
+            .corner-mixin(2rem);
+
+            background-color: @card-color;
+            border: 2px solid @rule-color;
+            padding: 1.5rem;
+        }
+
+        // The bar that attaches a card fades rather than spanning it, as a group of keywords is
+        // read as a whole rather than from its first line down.
+        .entry::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: @card-bar-width;
+            height: 100%;
+            background: linear-gradient(180deg, @accent-color 0%, transparent 100%);
+        }
+
+        .entry-header>:first-child {
+            .qualifier-text-mixin();
+
+            font-size: .875rem;
+            color: @text-color;
+        }
+    });
+
+// A keyword is a phrase within a line of text rather than an item of a list, so the list that the
+// markup provides is displayed as one.
+.keywords {
+    list-style: none;
+    padding-left: 0;
+    margin-top: .75rem;
+    font-size: .875rem;
+    color: @muted-color;
+}
+
+.keyword {
+    display: inline;
+}
+
+// The markup separates one keyword from the next by a line break, which is displayed as the space
+// that precedes this separator; the space that follows it is not, so it is provided here.
+.keyword+.keyword::before {
+    content: "\2022";
+    color: @accent-color;
+    padding-right: .35em;
+}
+
+// ----------------------------------------------------------------------
+// |  Screen
+// ----------------------------------------------------------------------
+
+// A narrow display has less room than the block and the cards are separated from its edges by, and
+// cannot display a heading at a size that was chosen for a page.
+@media screen and (max-width: 767.98px) {
+    body {
+        padding: 1rem .75rem;
+    }
+
+    .block-sections-mixin({
+            padding-left: 1.25rem;
+            padding-right: 1.25rem;
+        });
+
+    .basics {
+        grid-template-columns: 1fr;
+        padding-top: 1.5rem;
+
+        .picture {
+            grid-row: auto;
+        }
+
+        .name,
+        .label {
+            grid-column: auto;
+        }
+
+        .name {
+            font-size: 2.25rem;
+        }
+    }
+
+    .contact,
+    .profiles {
+        padding-bottom: 1.5rem;
+    }
+
+    .section-header {
+        min-width: 0;
+        font-size: 1.5rem;
+    }
+
+    .record-sections-mixin({
+            .entry {
+                padding: 1.25rem;
+            }
+        });
+}
+
+// ----------------------------------------------------------------------
+// |  Print
+// ----------------------------------------------------------------------
+@media print {
+    @page {
+        size: auto;
+        margin: .5in;
+    }
+
+    body {
+        // Printed content is read at a closer distance than content on a screen, and a resume that
+        // fits on a single page is preferred.
+        font-size: .75em;
+        line-height: 1.5;
+        padding: 0;
+        background-color: @surface-color;
+    }
+
+    #resume {
+        max-width: none;
+
+        // A browser omits background colors when printing unless it is asked not to adjust them;
+        // without this, the block and the bars that this presentation is composed of are printed
+        // only when the person printing has enabled background graphics.
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    // A heading is not worth printing at the bottom of a page. Entries are allowed to break, as
+    // keeping one whole costs the remainder of the page that it would not fit on -- and vertical
+    // space is the resource that determines how many pages are printed.
+    .section-header {
+        break-after: avoid;
+    }
+
+    // Vertical space is the resource that determines how many pages are printed.
+    .spacing-mixin(1.25rem);
+
+    .basics {
+        padding-top: 1.25rem;
+
+        .name {
+            font-size: 2.5rem;
+        }
+    }
+
+    .contact,
+    .profiles {
+        padding-bottom: 1.25rem;
+    }
+
+    .block-sections-mixin({
+            padding-left: 1.25rem;
+            padding-right: 1.25rem;
+        });
+
+    .section-header {
+        font-size: 1.5rem;
+        padding-bottom: .5rem;
+    }
+
+    .record-sections-mixin({
+            .entry {
+                padding: 1rem 1.25rem;
+            }
+
+            .entry::before {
+                top: 1rem;
+            }
+        });
+
+    .highlights,
+    .courses {
+        margin-top: .5rem;
+
+        li+li {
+            margin-top: .25rem;
+        }
+    }
+
+    .entry-body .summary {
+        margin-top: .5rem;
+    }
+
+    .keyword-sections-mixin({
+            .entry {
+                padding: 1rem;
+            }
+        });
+}

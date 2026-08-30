@@ -4,10 +4,10 @@
 basics:
   name: Jane Q. Developer
   label: Principal Software Engineer
-  picture: https://raw.githubusercontent.com/davidbrownell/dbrownell_ResumeTools/main/src/dbrownell_ResumeTools/samples/photo.png
+  image: https://raw.githubusercontent.com/davidbrownell/dbrownell_ResumeTools/main/src/dbrownell_ResumeTools/samples/photo.png
   email: jane@example.com
   phone: (555) 555-0142
-  website: https://jane.example.com
+  url: https://jane.example.com
   summary: >-
     Principal engineer with fifteen years of experience building distributed
     systems, developer tooling, and the release infrastructure that keeps them
@@ -15,8 +15,8 @@ basics:
 
   location:
     address: 1234 Cypress Street, Suite 400
-    city: Raleigh
     postalCode: "27601"
+    city: Raleigh
     countryCode: US
     region: NC
 
@@ -30,11 +30,16 @@ basics:
     - network: CodeStats
       username: janeqdeveloper
       url: https://codestats.net/users/janeqdeveloper
+    - network: Instagram
+      username: janeqdeveloper
+      url: https://www.instagram.com/janeqdeveloper
 
 work:
-  - company: Northwind Systems
+  - name: Northwind Systems
+    location: Raleigh, NC
+    description: Logistics software for regional carriers
     position: Principal Software Engineer
-    website: https://northwind.example.com
+    url: https://northwind.example.com
     startDate: 2019-03-01
     # endDate is omitted to indicate a current position.
     summary: Technical lead for the platform group that owns build, release, and observability tooling.
@@ -43,9 +48,9 @@ work:
       - Designed the multi-region failover strategy now used by all customer-facing services.
       - Mentored six engineers, three of whom were promoted to senior within two years.
 
-  - company: Contoso Analytics
+  - name: Contoso Analytics
     position: Senior Software Engineer
-    website: https://contoso.example.com
+    url: https://contoso.example.com
     startDate: 2014-06-15
     endDate: 2019-02-28
     summary: Built and operated the ingestion pipeline behind the company's real-time analytics product.
@@ -55,8 +60,8 @@ work:
 
 volunteer:
   - organization: Code for the Triangle
-    website: https://codeforthetriangle.example.org
     position: Technical Mentor
+    url: https://codeforthetriangle.example.org
     startDate: 2020-09-01
     endDate: 2023-05-31
     summary: Mentored volunteer developers building civic technology for local nonprofits.
@@ -66,11 +71,12 @@ volunteer:
 
 education:
   - institution: Georgia Institute of Technology
+    url: https://www.gatech.edu
     area: Computer Science
     studyType: Master of Science
     startDate: 2012-08-20
     endDate: 2014-05-03
-    gpa: "3.9"
+    score: "3.9"
     courses:
       - CS 6210 - Advanced Operating Systems
       - CS 6250 - Computer Networks
@@ -81,7 +87,7 @@ education:
     studyType: Bachelor of Science
     startDate: 2008-08-18
     endDate: 2012-05-12
-    gpa: "3.7"
+    score: "3.7"
     courses:
       - COMP 410 - Data Structures
       - COMP 550 - Algorithms and Analysis
@@ -97,17 +103,27 @@ awards:
     awarder: International Conference on Software Engineering
     summary: Recognized for the paper describing Contoso's incremental stream-processing architecture.
 
+certificates:
+  # A date whose day is omitted; the month and the day that follows it are both optional.
+  - name: Certified Kubernetes Administrator
+    date: "2023-02"
+    url: https://example.com/certificates/cka
+    issuer: Cloud Native Computing Foundation
+
+  - name: AWS Certified Solutions Architect - Professional
+    # date and url are optional and omitted here.
+    issuer: Amazon Web Services
+
 publications:
   - name: Incremental Stream Processing at Scale
     publisher: ACM Queue
     releaseDate: 2018-04-19
-    website: https://example.com/publications/incremental-stream-processing
+    url: https://example.com/publications/incremental-stream-processing
     summary: A practitioner's account of migrating a batch analytics pipeline to a streaming architecture.
 
   - name: Reproducible Builds for Polyglot Repositories
     publisher: IEEE Software
     releaseDate: 2021-07-01
-    website: https://example.com/publications/reproducible-builds
     summary: Techniques for achieving bit-identical build artifacts across heterogeneous toolchains.
 
 skills:
@@ -171,6 +187,31 @@ references:
 
   - name: Priya Raman, Director of Data at Contoso Analytics
     # reference text is optional and omitted here.
+
+projects:
+  - name: Ledger
+    description: An append-only event store that guarantees exactly-once delivery to downstream consumers.
+    highlights:
+      - Adopted by three teams within a year of its first release.
+      - Sustains 250K writes per second on commodity hardware.
+    keywords:
+      - Rust
+      - Raft
+      - gRPC
+    startDate: 2021-01-15
+    endDate: 2023-06-30
+    url: https://github.com/janeqdeveloper/ledger
+    roles:
+      - Author
+      - Maintainer
+    entity: Northwind Systems
+    type: application
+
+  # A date whose month and day are both omitted.
+  - name: The Cost of a Build
+    description: A conference talk on the compounding cost of slow feedback loops in continuous integration.
+    startDate: "2022"
+    type: talk
 
 meta:
   canonical: https://jane.example.com/resume.json

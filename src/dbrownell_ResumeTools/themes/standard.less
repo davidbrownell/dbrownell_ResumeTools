@@ -3,14 +3,15 @@
      #resume                     The document.
      .section.<name>             A section; <name> is the schema value that it displays (basics,
                                  contact, profiles, about, skills, work, education, volunteer,
-                                 awards, publications, languages, interests, references).
+                                 projects, awards, certificates, publications, languages, interests,
+                                 references).
      .section-header             The heading that introduces a section: .icon and .heading.
      .section-body               Everything that a section displays: .entry or .detail children.
      .entry                      One item within a section: .entry-header and .entry-body.
      .detail                     One short value within a section: .icon and .value.
      .icon                       An empty element; this stylesheet decides which icon it displays.
 
-   Everything else names the schema value that it displays (.position, .startDate, .gpa, .keyword,
+   Everything else names the schema value that it displays (.position, .startDate, .score, .keyword,
    and so on), so a stylesheet decides the entire presentation without the generator being involved.
 
    The generated markup references no stylesheet other than this one, so the resources that this
@@ -191,7 +192,7 @@ ul {
     border-top: none;
     border-bottom: 3px solid @accent-color;
 
-    .picture {
+    .image {
         grid-row: 1 / span 2;
         text-align: center;
 
@@ -281,6 +282,7 @@ ul {
 .position,
 .studyType,
 .awards .title,
+.certificates .name,
 .publications .name {
     .special-text-mixin();
 
@@ -288,23 +290,28 @@ ul {
     font-weight: bold;
 }
 
-.area {
+.area,
+.description {
     color: @muted-color;
 }
 
-// A highlight or course qualifies the entry that precedes it rather than introducing a list of its
-// own, so it is not separated from that entry by a full line.
+// A highlight, course, or role qualifies the entry that precedes it rather than introducing a list
+// of its own, so it is not separated from that entry by a full line.
 .highlights,
-.courses {
+.courses,
+.roles {
     margin-top: .3rem;
 }
 
-.courses {
+.courses,
+.roles,
+.entity,
+.type {
     font-size: .85em;
     color: @muted-color;
 }
 
-.gpa {
+.score {
     font-size: .85em;
     color: @muted-color;
 
@@ -334,10 +341,12 @@ ul {
     letter-spacing: .02em;
 }
 
-// The dates are displayed as a single range. The separator is not followed by a space, as the
-// markup places the dates on separate lines and that line break is displayed as one; the space that
-// precedes the separator is escaped so that it survives compression.
-.startDate::after {
+// The dates are displayed as a single range; a start date may stand alone (a project that names no
+// end date, for example), so the separator is displayed only when an end date follows it. The
+// separator is not followed by a space, as the markup places the dates on separate lines and that
+// line break is displayed as one; the space that precedes the separator is escaped so that it
+// survives compression.
+.startDate:has(+ .endDate)::after {
     content: "\00a0\2013";
 }
 
@@ -481,8 +490,16 @@ ul {
     .solid-icon-mixin("\f4c4");
 }
 
+.projects .section-header .icon {
+    .solid-icon-mixin("\f1b3");
+}
+
 .awards .section-header .icon {
     .solid-icon-mixin("\f091");
+}
+
+.certificates .section-header .icon {
+    .solid-icon-mixin("\f0a3");
 }
 
 .publications .section-header .icon {
@@ -505,7 +522,7 @@ ul {
     .solid-icon-mixin("\f0e0");
 }
 
-.website .icon {
+.url .icon {
     .solid-icon-mixin("\f0c1");
 }
 
@@ -529,6 +546,10 @@ ul {
 
 .profile.codestats .icon {
     .solid-icon-mixin("\f11c");
+}
+
+.profile.instagram .icon {
+    .brand-icon-mixin("\f16d");
 }
 
 // ----------------------------------------------------------------------
@@ -556,7 +577,7 @@ ul {
 
     .section.basics {
 
-        .picture {
+        .image {
             grid-row: auto;
         }
 

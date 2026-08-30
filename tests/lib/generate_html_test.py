@@ -27,15 +27,15 @@ FULL_CONTENT = """\
     basics:
       name: Sam Taylor
       label: Principal Engineer
-      picture: https://example.com/photo.jpg
+      image: https://example.com/photo.jpg
       email: sam@example.com
       phone: (555) 555-0142
-      website: https://example.com
+      url: https://example.com
       summary: A **summary**.
       location:
         address: 1 Main Street
-        city: Raleigh
         postalCode: "27601"
+        city: Raleigh
         countryCode: US
         region: NC
       profiles:
@@ -52,54 +52,84 @@ FULL_CONTENT = """\
           # A keyword that renders as markup is displayed as the markup itself.
           - "[tokio](https://tokio.rs)"
     work:
-      - company: Northwind
+      - name: Northwind
+        location: Raleigh, NC
+        description: A maker of things
         position: Engineer
-        website: https://northwind.example.com
+        url: https://northwind.example.com
         startDate: 2019-03-01
         # endDate is omitted to indicate a current position.
         summary: Did work.
         highlights:
           - Did a **thing**.
           - Did another thing.
-      # highlights are omitted here.
-      - company: Contoso
+      # The location, description, and highlights are omitted here.
+      - name: Contoso
         position: Senior Engineer
         startDate: 2014-06-15
         endDate: 2019-02-28
         summary: Did other work.
     education:
       - institution: Georgia Tech
+        url: https://gatech.example.com
         area: Computer Science
         studyType: Master of Science
         endDate: 2014-05-03
-        gpa: "3.9"
+        score: "3.9"
         courses:
           - CS 6210 - Advanced Operating Systems
-      # The end date, gpa, and courses are omitted here.
+      # The url, end date, score, and courses are omitted here.
       - institution: UNC
         area: Computer Science
         studyType: Bachelor of Science
     volunteer:
       - organization: Code for the Triangle
-        website: https://triangle.example.org
         position: Mentor
+        url: https://triangle.example.org
         startDate: 2020-09-01
         endDate: 2023-05-31
         summary: Mentored developers.
         highlights:
           - Led a curriculum.
+    projects:
+      - name: Ledger
+        description: An **event** store.
+        highlights:
+          - Adopted by three teams.
+        keywords:
+          - Rust
+        startDate: 2021-01-15
+        endDate: 2023-06-30
+        url: https://example.com/ledger
+        roles:
+          - Author
+        entity: Northwind
+        type: application
+      # Everything other than the name and description is omitted here, and the date that remains
+      # names no month.
+      - name: The Cost of a Build
+        description: A talk.
+        startDate: 2022
     awards:
       - title: Excellence Award
         date: 2022-11-10
         awarder: Northwind
         summary: For impact.
+    certificates:
+      - name: Certified Administrator
+        date: 2023-02
+        url: https://example.com/certificate
+        issuer: A Foundation
+      # The date and url are omitted here.
+      - name: Certified Architect
+        issuer: A Cloud
     publications:
       - name: Stream Processing
         publisher: ACM Queue
         releaseDate: 2018-04-19
-        website: https://example.com/publication
+        url: https://example.com/publication
         summary: An account.
-      # The website is omitted here.
+      # The url is omitted here.
       - name: Reproducible Builds
         publisher: IEEE Software
         releaseDate: 2021-07-01
@@ -124,26 +154,39 @@ FULL_CONTENT = """\
 UNSAFE_CONTENT = """\
     basics:
       name: Sam Taylor
-      picture: "javascript:alert(1)"
+      image: "javascript:alert(1)"
       email: sam@example.com
-      website: "javascript:alert(2)"
+      url: "javascript:alert(2)"
       profiles:
         - network: GitHub
           username: samtaylor
           url: "vbscript:msgbox(3)"
     work:
-      - company: Contoso
+      - name: Contoso
         position: Engineer
-        website: "data:text/html,<script>alert(4)</script>"
+        url: "data:text/html,<script>alert(4)</script>"
         startDate: 2014-06-15
         endDate: 2019-02-28
         summary: Did work.
+    education:
+      - institution: Georgia Tech
+        url: "javascript:alert(5)"
+        area: Computer Science
+        studyType: Master of Science
+    certificates:
+      - name: Certified Administrator
+        url: "javascript:alert(6)"
+        issuer: A Foundation
     publications:
       - name: Stream Processing
         publisher: ACM Queue
         releaseDate: 2018-04-19
-        website: "javascript:alert(5)"
+        url: "javascript:alert(7)"
         summary: An account.
+    projects:
+      - name: Ledger
+        description: An event store.
+        url: "javascript:alert(8)"
     """
 
 UNSAFE_URIS = [
@@ -152,6 +195,9 @@ UNSAFE_URIS = [
     "vbscript:msgbox(3)",
     "data:text/html,<script>alert(4)</script>",
     "javascript:alert(5)",
+    "javascript:alert(6)",
+    "javascript:alert(7)",
+    "javascript:alert(8)",
 ]
 
 CSS = "body { color: red; }\n"
@@ -291,7 +337,9 @@ def test_EmptySectionsAreNotDisplayed(tmp_path: Path):
         "work",
         "education",
         "volunteer",
+        "projects",
         "awards",
+        "certificates",
         "publications",
         "languages",
         "interests",
@@ -309,7 +357,7 @@ def test_Basics(tmp_path: Path):
     expected = _Fragment(
         """\
         <section class="section basics">
-          <div class="picture">
+          <div class="image">
             <img src="https://example.com/photo.jpg" alt="Picture of Sam Taylor">
           </div>
           <div class="name"><p>Sam Taylor</p></div>
@@ -323,7 +371,7 @@ def test_Basics(tmp_path: Path):
 
 
 # ----------------------------------------------------------------------
-def test_BasicsWithoutAPictureOrLabel(tmp_path: Path):
+def test_BasicsWithoutAnImageOrLabel(tmp_path: Path):
     expected = _Fragment(
         """\
         <section class="section basics">
@@ -351,7 +399,7 @@ def test_Contact(tmp_path: Path):
               <a href="mailto:sam@example.com" alt="email address" target="_blank">sam@example.com</a>
             </span>
           </div>
-          <div class="detail website">
+          <div class="detail url">
             <span class="icon"></span>
             <span class="value">
               <a href="https://example.com" alt="website" target="_blank">https://example.com</a>
@@ -390,8 +438,8 @@ def test_LocationWithoutOptionalValues(tmp_path: Path):
           name: Sam Taylor
           location:
             address: 1 Main Street
-            city: Raleigh
             postalCode: "27601"
+            city: Raleigh
         """,
     )
 
@@ -555,19 +603,21 @@ def test_KeywordTextIsEscaped(tmp_path: Path):
 def test_Work(tmp_path: Path):
     content = _GenerateContent(tmp_path, FULL_CONTENT)
 
-    # A current position with a website is displayed as a link
+    # A current position with a url is displayed as a link
     current = _Fragment(
         """\
         <div class="entry">
           <div class="entry-header">
-            <div class="company">
+            <div class="name">
               <a href="https://northwind.example.com" alt="Northwind" target="_blank">Northwind</a>
             </div>
+            <div class="location">Raleigh, NC</div>
             <div class="startDate">March 2019</div>
             <div class="endDate">Present</div>
           </div>
           <div class="entry-body">
             <div class="position">Engineer</div>
+            <div class="description">A maker of things</div>
             <div class="summary"><p>Did work.</p></div>
             <ul class="highlights">
               <li>Did a <strong>thing</strong>.</li>
@@ -579,12 +629,12 @@ def test_Work(tmp_path: Path):
         4,
     )
 
-    # A previous position without a website or highlights is displayed as text
+    # A previous position without a url, location, description, or highlights is displayed as text
     previous = _Fragment(
         """\
         <div class="entry">
           <div class="entry-header">
-            <div class="company">Contoso</div>
+            <div class="name">Contoso</div>
             <div class="startDate">June 2014</div>
             <div class="endDate">February 2019</div>
           </div>
@@ -653,13 +703,15 @@ def test_Education(tmp_path: Path):
         """\
         <div class="entry">
           <div class="entry-header">
-            <div class="institution">Georgia Tech</div>
+            <div class="institution">
+              <a href="https://gatech.example.com" alt="Georgia Tech" target="_blank">Georgia Tech</a>
+            </div>
             <div class="endDate">May 2014</div>
           </div>
           <div class="entry-body">
             <div class="studyType">Master of Science</div>
             <div class="area">Computer Science</div>
-            <div class="gpa">3.9</div>
+            <div class="score">3.9</div>
             <ul class="courses">
               <li>CS 6210 - Advanced Operating Systems</li>
             </ul>
@@ -724,13 +776,145 @@ def test_Awards(tmp_path: Path):
 
 # ----------------------------------------------------------------------
 # |
+# |  Certificates
+# |
+# ----------------------------------------------------------------------
+def test_Certificates(tmp_path: Path):
+    content = _GenerateContent(tmp_path, FULL_CONTENT)
+
+    # A certificate with a date and a url is dated and displayed as a link
+    with_optional_values = _Fragment(
+        """\
+        <div class="entry">
+          <div class="entry-header">
+            <div class="issuer">A Foundation</div>
+            <div class="date">February 2023</div>
+          </div>
+          <div class="entry-body">
+            <div class="name">
+              <a href="https://example.com/certificate" alt="Certified Administrator" target="_blank">Certified Administrator</a>
+            </div>
+          </div>
+        </div>
+        """,
+        4,
+    )
+
+    without_optional_values = _Fragment(
+        """\
+        <div class="entry">
+          <div class="entry-header">
+            <div class="issuer">A Cloud</div>
+          </div>
+          <div class="entry-body">
+            <div class="name">Certified Architect</div>
+          </div>
+        </div>
+        """,
+        4,
+    )
+
+    assert '<span class="heading">Certificates</span>' in content
+    assert with_optional_values in content
+    assert without_optional_values in content
+
+
+# ----------------------------------------------------------------------
+# |
+# |  Projects
+# |
+# ----------------------------------------------------------------------
+def test_Projects(tmp_path: Path):
+    content = _GenerateContent(tmp_path, FULL_CONTENT)
+
+    with_optional_values = _Fragment(
+        """\
+        <div class="entry">
+          <div class="entry-header">
+            <div class="name">
+              <a href="https://example.com/ledger" alt="Ledger" target="_blank">Ledger</a>
+            </div>
+            <div class="startDate">January 2021</div>
+            <div class="endDate">June 2023</div>
+          </div>
+          <div class="entry-body">
+            <div class="entity">Northwind</div>
+            <div class="type">application</div>
+            <ul class="roles">
+              <li>Author</li>
+            </ul>
+            <div class="description"><p>An <strong>event</strong> store.</p></div>
+            <ul class="highlights">
+              <li>Adopted by three teams.</li>
+            </ul>
+            <ul class="keywords">
+              <li class="keyword">Rust</li>
+            </ul>
+          </div>
+        </div>
+        """,
+        4,
+    )
+
+    # A date that names no month is displayed as the year alone
+    without_optional_values = _Fragment(
+        """\
+        <div class="entry">
+          <div class="entry-header">
+            <div class="name">The Cost of a Build</div>
+            <div class="startDate">2022</div>
+          </div>
+          <div class="entry-body">
+            <div class="description"><p>A talk.</p></div>
+          </div>
+        </div>
+        """,
+        4,
+    )
+
+    assert '<span class="heading">Projects</span>' in content
+    assert with_optional_values in content
+    assert without_optional_values in content
+
+
+# ----------------------------------------------------------------------
+def test_ProjectWithAnEndDateAlone(tmp_path: Path):
+    """An end date is displayed on its own when a project names no start date."""
+
+    content = _GenerateContent(
+        tmp_path,
+        """\
+        basics:
+          name: Sam Taylor
+        projects:
+          - name: Ledger
+            description: An event store.
+            endDate: 2023-06-30
+        """,
+    )
+
+    expected = _Fragment(
+        """\
+        <div class="entry-header">
+          <div class="name">Ledger</div>
+          <div class="endDate">June 2023</div>
+        </div>
+        """,
+        5,
+    )
+
+    assert expected in content
+
+
+# ----------------------------------------------------------------------
+# |
 # |  Publications
 # |
 # ----------------------------------------------------------------------
 def test_Publications(tmp_path: Path):
     content = _GenerateContent(tmp_path, FULL_CONTENT)
 
-    # A publication with a website is displayed as a link
+    # A publication with a url is displayed as a link
     with_website = _Fragment(
         """\
         <div class="entry">
@@ -749,7 +933,7 @@ def test_Publications(tmp_path: Path):
         4,
     )
 
-    # A publication without a website is displayed as text
+    # A publication without a url is displayed as text
     without_website = _Fragment(
         """\
         <div class="entry">
@@ -959,8 +1143,8 @@ def test_SafeUrisAreDisplayed(tmp_path: Path):
         """\
         basics:
           name: Sam Taylor
-          picture: photo.jpg
-          website: https://example.com
+          image: photo.jpg
+          url: https://example.com
         """,
     )
 
@@ -969,7 +1153,7 @@ def test_SafeUrisAreDisplayed(tmp_path: Path):
 
 
 # ----------------------------------------------------------------------
-def test_UnsafePictureIsNotDisplayed(tmp_path: Path):
+def test_UnsafeImageIsNotDisplayed(tmp_path: Path):
     expected = _Fragment(
         """\
         <section class="section basics">
@@ -1026,7 +1210,7 @@ def test_UnsafeCompanyIsDisplayedWithoutALink(tmp_path: Path):
         """\
         <div class="entry">
           <div class="entry-header">
-            <div class="company">Contoso</div>
+            <div class="name">Contoso</div>
             <div class="startDate">June 2014</div>
             <div class="endDate">February 2019</div>
           </div>
@@ -1097,7 +1281,7 @@ def test_UnsafeUriWithAnInsignificantCharacterIsNotDisplayed(tmp_path: Path, uri
         f"""\
         basics:
           name: Sam Taylor
-          website: "{uri}"
+          url: "{uri}"
         """,
     )
 
@@ -1106,7 +1290,7 @@ def test_UnsafeUriWithAnInsignificantCharacterIsNotDisplayed(tmp_path: Path, uri
     content = (output_directory / "index.html").read_text(encoding="utf-8")
 
     assert "script:alert(1)" not in content
-    assert '<div class="detail website">' not in content
+    assert '<div class="detail url">' not in content
 
 
 # ----------------------------------------------------------------------
@@ -1118,7 +1302,7 @@ def test_SafeUriIsNormalized(tmp_path: Path):
         """\
         basics:
           name: Sam Taylor
-          website: "https://example.com/my resume"
+          url: "https://example.com/my resume"
         """,
     )
 

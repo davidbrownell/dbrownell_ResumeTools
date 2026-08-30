@@ -102,7 +102,9 @@
     .work,
     .education,
     .volunteer,
+    .projects,
     .awards,
+    .certificates,
     .publications,
     .references {
         @rules();
@@ -249,6 +251,10 @@ ul {
     .network-label-mixin("Code::Stats");
 }
 
+.profile.instagram {
+    .network-label-mixin("Instagram");
+}
+
 // ----------------------------------------------------------------------
 // |  Block
 // ----------------------------------------------------------------------
@@ -270,7 +276,7 @@ ul {
 
     // A picture is displayed as it was provided rather than as a circle, which is the shape that
     // everything else here is displayed as.
-    .picture {
+    .image {
         grid-row: 1 / span 2;
 
         img {
@@ -464,8 +470,10 @@ ul {
 }
 
 // The dates are displayed as a single range rather than as two values that are separated from one
-// another. The spaces are escaped so that they survive compression.
-.startDate::after {
+// another; a start date may stand alone (a project that names no end date, for example), so the
+// separator is displayed only when an end date follows it. The spaces are escaped so that they
+// survive compression.
+.startDate:has(+ .endDate)::after {
     content: "\00a0\2013\00a0";
 }
 
@@ -474,6 +482,7 @@ ul {
 .position,
 .studyType,
 .awards .title,
+.certificates .name,
 .publications .name {
     font-size: 1.125rem;
     font-weight: 600;
@@ -481,7 +490,8 @@ ul {
     margin-top: .25rem;
 }
 
-.area {
+.area,
+.description {
     color: @muted-color;
 }
 
@@ -497,10 +507,11 @@ ul {
     max-width: 42.5rem;
 }
 
-// A highlight or course qualifies the entry that precedes it rather than introducing a list of its
-// own, so it is not separated from that entry by a full line.
+// A highlight, course, or role qualifies the entry that precedes it rather than introducing a list
+// of its own, so it is not separated from that entry by a full line.
 .highlights,
-.courses {
+.courses,
+.roles {
     .dash-list-mixin();
 
     margin-top: 1rem;
@@ -511,12 +522,15 @@ ul {
 }
 
 .courses,
-.gpa {
+.roles,
+.entity,
+.type,
+.score {
     font-size: .9375rem;
     color: @muted-color;
 }
 
-.gpa {
+.score {
     .qualifier-text-mixin();
 
     font-size: .8125rem;
@@ -645,7 +659,7 @@ ul {
         grid-template-columns: 1fr;
         padding-top: 1.5rem;
 
-        .picture {
+        .image {
             grid-row: auto;
         }
 

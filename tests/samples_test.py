@@ -11,16 +11,19 @@ from dbrownell_ResumeTools.lib import json_resume_schema
 from dbrownell_ResumeTools.lib.json_resume_schema import (
     Award,
     Basics,
+    Certificate,
     Education,
     Interest,
     Language,
     Location,
+    Meta,
     Profile,
+    Project,
     Publication,
     Reference,
     ResumeData,
+    ResumeDate,
     Skill,
-    SkillLevel,
     Volunteer,
     Work,
 )
@@ -39,14 +42,18 @@ ALL_SAMPLE_SUFFIXES = [".json", ".yaml"]
 ALL_DATACLASSES = [
     Award,
     Basics,
+    Certificate,
     Education,
     Interest,
     Language,
     Location,
+    Meta,
     Profile,
+    Project,
     Publication,
     Reference,
     ResumeData,
+    ResumeDate,
     Skill,
     Volunteer,
     Work,
@@ -173,12 +180,17 @@ def test_FullSamplePopulatesEveryField(stem: str):
 
 # ----------------------------------------------------------------------
 @pytest.mark.parametrize("stem", FULL_SAMPLE_STEMS)
-def test_FullSampleDemonstratesEverySkillLevel(stem: str):
-    """The full samples demonstrate every SkillLevel value."""
+def test_FullSampleDemonstratesPartialDates(stem: str):
+    """The full samples demonstrate the dates whose month and day are omitted."""
 
     resume_data = ResumeData.FromFile(SAMPLES_DIR / f"{stem}{ALL_SAMPLE_SUFFIXES[0]}")
 
-    assert {skill.level for skill in resume_data.skills} == {*SkillLevel, None}
+    assert any(
+        item.date is not None and item.date.month is not None and item.date.day is None
+        for item in resume_data.certificates
+    )
+
+    assert any(item.startDate is not None and item.startDate.month is None for item in resume_data.projects)
 
 
 # ----------------------------------------------------------------------
@@ -189,6 +201,7 @@ def test_FullSampleDemonstratesOptionalOmissions(stem: str):
     resume_data = ResumeData.FromFile(SAMPLES_DIR / f"{stem}{ALL_SAMPLE_SUFFIXES[0]}")
 
     assert any(item.endDate is None for item in resume_data.work)
+    assert any(item.date is None for item in resume_data.certificates)
     assert any(item.level is None for item in resume_data.skills)
     assert any(item.keywords == [] for item in resume_data.interests)
     assert any(item.reference is None for item in resume_data.references)

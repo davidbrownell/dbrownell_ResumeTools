@@ -2,24 +2,25 @@
 # This is useful so that data can be written in YAML (which supports comments and other conveniences),
 # converted to JSON, and then imported by JSON Resume.
 
-(Date date)
+# An ISO 8601 date whose month and day are optional (e.g. 2014, 2014-06, 2014-06-29).
+(Date string)
 
 <resume_data>:
     <basics>:
         <name string>
         <label string ?>
-        <picture uri ?>
+        <image uri ?>
         <email string ?>
         <phone string ?>
-        <website string ?>
+        <url uri ?>
         <summary string ?>
 
         <location ?>:
             <address string>
-            <city string>
             <postalCode string>
-            <countryCode string ?>
-            <region string ?> # state
+            <city string>
+            <countryCode string ?> # ISO-3166-1 ALPHA-2
+            <region string ?> # state or province
 
         <profiles *>:
             <network string>
@@ -27,9 +28,11 @@
             <url uri>
 
     <work *>:
-        <company string>
+        <name string> # the company
+        <location string ?> # e.g. Menlo Park, CA
+        <description string ?> # e.g. Social Media Company
         <position string>
-        <website uri ?>
+        <url uri ?>
         <startDate Date>
         <endDate Date ?>
         <summary string>
@@ -37,8 +40,8 @@
 
     <volunteer *>:
         <organization string>
-        <website uri ?>
         <position string>
+        <url uri ?>
         <startDate Date>
         <endDate Date ?>
         <summary string>
@@ -46,11 +49,12 @@
 
     <education *>:
         <institution string>
+        <url uri ?>
         <area string>
         <studyType string>
         <startDate Date ?>
         <endDate Date ?>
-        <gpa string ?>
+        <score string ?> # grade point average
         <courses string *>
 
     <awards *>:
@@ -59,16 +63,22 @@
         <awarder string>
         <summary string>
 
+    <certificates *>:
+        <name string>
+        <date_ Date name="date" ?>
+        <url uri ?>
+        <issuer string>
+
     <publications *>:
         <name string>
         <publisher string>
         <releaseDate Date>
-        <website uri ?>
+        <url uri ?>
         <summary string>
 
     <skills *>:
         <name string>
-        <level enum values=["Beginner", "Intermediate", "Advanced", "Master"] ?>
+        <level string ?> # e.g. Master
         <keywords string *>
 
     <languages *>:
@@ -83,4 +93,19 @@
         <name string>
         <reference string ?>
 
-    <meta any ?>
+    <projects *>:
+        <name string>
+        <description string>
+        <highlights string *>
+        <keywords string *>
+        <startDate Date ?>
+        <endDate Date ?>
+        <url uri ?>
+        <roles string *>
+        <entity string ?> # e.g. greenpeace
+        <type_ string name="type" ?> # e.g. volunteering, presentation, talk, application, conference
+
+    <meta ?>:
+        <canonical uri ?>
+        <version string ?> # semver, e.g. v1.0.0
+        <lastModified string ?> # ISO 8601, e.g. 2014-06-29T09:00:00

@@ -120,7 +120,9 @@ ul {
 .work,
 .education,
 .volunteer,
+.projects,
 .awards,
+.certificates,
 .publications,
 .languages,
 .interests,
@@ -172,6 +174,10 @@ ul {
     .solid-icon-mixin("\f11c");
 }
 
+.profile.instagram .icon {
+    .brand-icon-mixin("\f16d");
+}
+
 .heading {
     text-transform: uppercase;
     letter-spacing: .14em;
@@ -187,7 +193,9 @@ ul {
 .work,
 .education,
 .volunteer,
+.projects,
 .awards,
+.certificates,
 .publications,
 .languages,
 .interests,
@@ -211,7 +219,7 @@ ul {
 // |  Basics
 // ----------------------------------------------------------------------
 .basics {
-    .picture img {
+    .image img {
         width: 100%;
         aspect-ratio: 1;
         object-fit: cover;
@@ -280,7 +288,6 @@ ul {
 // |  Skills and Interests
 // ----------------------------------------------------------------------
 
-// The keywords of a skill or interest are read as a run of text rather than as separate badges.
 .skills,
 .interests {
     .entry+.entry {
@@ -291,7 +298,13 @@ ul {
         font-weight: 600;
         font-size: .85rem;
     }
+}
 
+// Keywords are read as a run of text rather than as separate badges, and as a run rather than as
+// the list of accomplishments that a project displays beside them.
+.skills,
+.interests,
+.projects {
     .keywords {
         list-style: none;
         padding: 0;
@@ -341,7 +354,9 @@ ul {
     letter-spacing: .03em;
 }
 
-.startDate::after {
+// A start date may stand alone (a project that names no end date, for example), so the separator
+// that joins the dates into a range is displayed only when an end date follows it.
+.startDate:has(+ .endDate)::after {
     content: "\00a0\2013\00a0";
 }
 
@@ -349,6 +364,7 @@ ul {
 .position,
 .studyType,
 .awards .title,
+.certificates .name,
 .publications .name {
     color: @accent-color;
     font-weight: 600;
@@ -356,12 +372,16 @@ ul {
 }
 
 .area,
-.courses {
+.courses,
+.description,
+.entity,
+.type,
+.roles {
     color: @muted-color;
     font-size: .82rem;
 }
 
-.gpa {
+.score {
     color: @muted-color;
     font-size: .82rem;
 
@@ -414,7 +434,9 @@ ul {
     .work,
     .education,
     .volunteer,
+    .projects,
     .awards,
+    .certificates,
     .publications,
     .languages,
     .interests,
@@ -427,7 +449,7 @@ ul {
         padding-top: 1.5rem;
     }
 
-    .basics .picture img {
+    .basics .image img {
         width: 8rem;
     }
 }

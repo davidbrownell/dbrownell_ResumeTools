@@ -4,7 +4,7 @@ import json
 import re
 import textwrap
 
-from datetime import date as Date
+from datetime import date as CalendarDate
 from pathlib import Path
 
 import pytest
@@ -15,16 +15,19 @@ from pydantic import TypeAdapter, ValidationError
 from dbrownell_ResumeTools.lib.json_resume_schema import (
     Award,
     Basics,
+    Certificate,
     Education,
     Interest,
     Language,
     Location,
+    Meta,
     Profile,
+    Project,
     Publication,
     Reference,
     ResumeData,
+    ResumeDate,
     Skill,
-    SkillLevel,
     Volunteer,
     Work,
 )
@@ -42,15 +45,15 @@ def _FullResumeContent() -> dict:
         "basics": {
             "name": "Jane Doe",
             "label": "Software Engineer",
-            "picture": "https://example.com/jane.png",
+            "image": "https://example.com/jane.png",
             "email": "jane@example.com",
             "phone": "555-1234",
-            "website": "https://example.com",
+            "url": "https://example.com",
             "summary": "Summary of Jane.",
             "location": {
                 "address": "123 Main St",
-                "city": "Atlanta",
                 "postalCode": "30301",
+                "city": "Atlanta",
                 "countryCode": "US",
                 "region": "GA",
             },
@@ -69,9 +72,11 @@ def _FullResumeContent() -> dict:
         },
         "work": [
             {
-                "company": "Acme",
+                "name": "Acme",
+                "location": "Atlanta, GA",
+                "description": "A maker of things",
                 "position": "Engineer",
-                "website": "https://acme.example.com",
+                "url": "https://acme.example.com",
                 "startDate": "2020-01-02",
                 "endDate": "2022-03-04",
                 "summary": "Built things.",
@@ -81,8 +86,8 @@ def _FullResumeContent() -> dict:
         "volunteer": [
             {
                 "organization": "Helpers",
-                "website": "https://helpers.example.com",
                 "position": "Volunteer",
+                "url": "https://helpers.example.com",
                 "startDate": "2019-05-06",
                 "endDate": "2019-12-31",
                 "summary": "Helped out.",
@@ -92,11 +97,12 @@ def _FullResumeContent() -> dict:
         "education": [
             {
                 "institution": "Georgia Tech",
+                "url": "https://gatech.example.com",
                 "area": "Computer Science",
                 "studyType": "Bachelor",
                 "startDate": "2015-08-01",
                 "endDate": "2019-05-01",
-                "gpa": "4.0",
+                "score": "4.0",
                 "courses": ["CS 101", "CS 102"],
             },
         ],
@@ -108,12 +114,20 @@ def _FullResumeContent() -> dict:
                 "summary": "For being the best.",
             },
         ],
+        "certificates": [
+            {
+                "name": "A Certificate",
+                "date": "2023-02",
+                "url": "https://example.com/certificate",
+                "issuer": "An Issuer",
+            },
+        ],
         "publications": [
             {
                 "name": "A Paper",
                 "publisher": "A Publisher",
                 "releaseDate": "2021-01-01",
-                "website": "https://example.com/paper",
+                "url": "https://example.com/paper",
                 "summary": "About a thing.",
             },
         ],
@@ -133,7 +147,25 @@ def _FullResumeContent() -> dict:
         "references": [
             {"name": "John Smith", "reference": "She is great."},
         ],
-        "meta": {"canonical": "https://example.com/resume.json", "version": "v1.0.0"},
+        "projects": [
+            {
+                "name": "A Project",
+                "description": "Something that was built.",
+                "highlights": ["Highlight 1"],
+                "keywords": ["Rust"],
+                "startDate": "2021",
+                "endDate": "2022-03",
+                "url": "https://example.com/project",
+                "roles": ["Author"],
+                "entity": "Acme",
+                "type": "application",
+            },
+        ],
+        "meta": {
+            "canonical": "https://example.com/resume.json",
+            "version": "v1.0.0",
+            "lastModified": "2021-06-15T09:00:00",
+        },
     }
 
 
@@ -145,15 +177,15 @@ def _FullResumeData() -> ResumeData:
         basics=Basics(
             name="Jane Doe",
             label="Software Engineer",
-            picture="https://example.com/jane.png",
+            image="https://example.com/jane.png",
             email="jane@example.com",
             phone="555-1234",
-            website="https://example.com",
+            url="https://example.com",
             summary="Summary of Jane.",
             location=Location(
                 address="123 Main St",
-                city="Atlanta",
                 postalCode="30301",
+                city="Atlanta",
                 countryCode="US",
                 region="GA",
             ),
@@ -168,11 +200,13 @@ def _FullResumeData() -> ResumeData:
         ),
         work=[
             Work(
-                company="Acme",
+                name="Acme",
+                location="Atlanta, GA",
+                description="A maker of things",
                 position="Engineer",
-                website="https://acme.example.com",
-                startDate=Date(2020, 1, 2),
-                endDate=Date(2022, 3, 4),
+                url="https://acme.example.com",
+                startDate=ResumeDate(2020, 1, 2),
+                endDate=ResumeDate(2022, 3, 4),
                 summary="Built things.",
                 highlights=["Highlight 1", "Highlight 2"],
             ),
@@ -180,10 +214,10 @@ def _FullResumeData() -> ResumeData:
         volunteer=[
             Volunteer(
                 organization="Helpers",
-                website="https://helpers.example.com",
                 position="Volunteer",
-                startDate=Date(2019, 5, 6),
-                endDate=Date(2019, 12, 31),
+                url="https://helpers.example.com",
+                startDate=ResumeDate(2019, 5, 6),
+                endDate=ResumeDate(2019, 12, 31),
                 summary="Helped out.",
                 highlights=["Helped a lot"],
             ),
@@ -191,38 +225,65 @@ def _FullResumeData() -> ResumeData:
         education=[
             Education(
                 institution="Georgia Tech",
+                url="https://gatech.example.com",
                 area="Computer Science",
                 studyType="Bachelor",
-                startDate=Date(2015, 8, 1),
-                endDate=Date(2019, 5, 1),
-                gpa="4.0",
+                startDate=ResumeDate(2015, 8, 1),
+                endDate=ResumeDate(2019, 5, 1),
+                score="4.0",
                 courses=["CS 101", "CS 102"],
             ),
         ],
         awards=[
             Award(
                 title="Best Engineer",
-                date=Date(2021, 6, 15),
+                date=ResumeDate(2021, 6, 15),
                 awarder="Acme",
                 summary="For being the best.",
+            ),
+        ],
+        certificates=[
+            Certificate(
+                name="A Certificate",
+                date=ResumeDate(2023, 2),
+                url="https://example.com/certificate",
+                issuer="An Issuer",
             ),
         ],
         publications=[
             Publication(
                 name="A Paper",
                 publisher="A Publisher",
-                releaseDate=Date(2021, 1, 1),
-                website="https://example.com/paper",
+                releaseDate=ResumeDate(2021, 1, 1),
+                url="https://example.com/paper",
                 summary="About a thing.",
             ),
         ],
         skills=[
-            Skill(name="Python", level=SkillLevel.Master, keywords=["pydantic", "pytest"]),
+            Skill(name="Python", level="Master", keywords=["pydantic", "pytest"]),
         ],
         languages=[Language(language="English", fluency="Native speaker")],
         interests=[Interest(name="Hiking", keywords=["mountains", "trails"])],
         references=[Reference(name="John Smith", reference="She is great.")],
-        meta={"canonical": "https://example.com/resume.json", "version": "v1.0.0"},
+        projects=[
+            Project(
+                name="A Project",
+                description="Something that was built.",
+                highlights=["Highlight 1"],
+                keywords=["Rust"],
+                startDate=ResumeDate(2021),
+                endDate=ResumeDate(2022, 3),
+                url="https://example.com/project",
+                roles=["Author"],
+                entity="Acme",
+                type="application",
+            ),
+        ],
+        meta=Meta(
+            canonical="https://example.com/resume.json",
+            version="v1.0.0",
+            lastModified="2021-06-15T09:00:00",
+        ),
     )
 
 
@@ -233,23 +294,27 @@ def _MinimalResumeContent() -> dict:
 
 # ----------------------------------------------------------------------
 # |
-# |  SkillLevel
+# |  ResumeDate
 # |
 # ----------------------------------------------------------------------
-def test_SkillLevelValues():
-    assert [item.value for item in SkillLevel] == [
-        "Beginner",
-        "Intermediate",
-        "Advanced",
-        "Master",
-    ]
+def test_ResumeDateComplete():
+    value = ResumeDate(2020, 1, 2)
+
+    assert value.year == 2020
+    assert value.month == 1
+    assert value.day == 2
 
 
 # ----------------------------------------------------------------------
-def test_SkillLevelIsStr():
-    assert isinstance(SkillLevel.Beginner, str)
-    assert SkillLevel.Advanced == "Advanced"
-    assert SkillLevel("Master") is SkillLevel.Master
+def test_ResumeDatePartial():
+    assert ResumeDate(2020) == ResumeDate(2020, None, None)
+    assert ResumeDate(2020, 6) == ResumeDate(2020, 6, None)
+
+
+# ----------------------------------------------------------------------
+def test_ResumeDateIsFrozen():
+    with pytest.raises(AttributeError):
+        ResumeDate(2020).year = 2021  # ty: ignore[invalid-assignment]
 
 
 # ----------------------------------------------------------------------
@@ -258,7 +323,7 @@ def test_SkillLevelIsStr():
 # |
 # ----------------------------------------------------------------------
 def test_LocationRequiredOnly():
-    location = Location(address="123 Main St", city="Atlanta", postalCode="30301")
+    location = Location(address="123 Main St", postalCode="30301", city="Atlanta")
 
     assert location.address == "123 Main St"
     assert location.city == "Atlanta"
@@ -271,8 +336,8 @@ def test_LocationRequiredOnly():
 def test_LocationAll():
     location = Location(
         address="123 Main St",
-        city="Atlanta",
         postalCode="30301",
+        city="Atlanta",
         countryCode="US",
         region="GA",
     )
@@ -316,10 +381,10 @@ def test_BasicsRequiredOnly():
 
     assert basics.name == "Jane Doe"
     assert basics.label is None
-    assert basics.picture is None
+    assert basics.image is None
     assert basics.email is None
     assert basics.phone is None
-    assert basics.website is None
+    assert basics.url is None
     assert basics.summary is None
     assert basics.location is None
     assert basics.profiles == []
@@ -329,13 +394,13 @@ def test_BasicsRequiredOnly():
 def test_BasicsUriValuesAreNotValidated():
     """`Uri` is an alias for `str`; no url validation is performed."""
 
-    basics = Basics(name="Jane Doe", picture="not a url", website="also not a url")
+    basics = Basics(name="Jane Doe", image="not a url", url="also not a url")
 
-    assert basics.picture == "not a url"
-    assert basics.website == "also not a url"
+    assert basics.image == "not a url"
+    assert basics.url == "also not a url"
 
     validated = TypeAdapter(Basics).validate_python(
-        {"name": "Jane Doe", "picture": "not a url", "website": "also not a url"},
+        {"name": "Jane Doe", "image": "not a url", "url": "also not a url"},
     )
 
     assert validated == basics
@@ -359,16 +424,18 @@ def test_BasicsProfilesDefaultIsNotShared():
 # ----------------------------------------------------------------------
 def test_WorkRequiredOnly():
     work = Work(
-        company="Acme",
+        name="Acme",
         position="Engineer",
-        startDate=Date(2020, 1, 2),
+        startDate=ResumeDate(2020, 1, 2),
         summary="Built things.",
     )
 
-    assert work.company == "Acme"
+    assert work.name == "Acme"
     assert work.position == "Engineer"
-    assert work.startDate == Date(2020, 1, 2)
-    assert work.website is None
+    assert work.startDate == ResumeDate(2020, 1, 2)
+    assert work.location is None
+    assert work.description is None
+    assert work.url is None
     assert work.endDate is None
     assert work.highlights == []
 
@@ -382,12 +449,12 @@ def test_VolunteerRequiredOnly():
     volunteer = Volunteer(
         organization="Helpers",
         position="Volunteer",
-        startDate=Date(2019, 5, 6),
+        startDate=ResumeDate(2019, 5, 6),
         summary="Helped out.",
     )
 
     assert volunteer.organization == "Helpers"
-    assert volunteer.website is None
+    assert volunteer.url is None
     assert volunteer.endDate is None
     assert volunteer.highlights == []
 
@@ -403,9 +470,10 @@ def test_EducationRequiredOnly():
     assert education.institution == "Georgia Tech"
     assert education.area == "Computer Science"
     assert education.studyType == "Bachelor"
+    assert education.url is None
     assert education.startDate is None
     assert education.endDate is None
-    assert education.gpa is None
+    assert education.score is None
     assert education.courses == []
 
 
@@ -417,15 +485,42 @@ def test_EducationRequiredOnly():
 def test_Award():
     award = Award(
         title="Best Engineer",
-        date=Date(2021, 6, 15),
+        date=ResumeDate(2021, 6, 15),
         awarder="Acme",
         summary="For being the best.",
     )
 
     assert award.title == "Best Engineer"
-    assert award.date == Date(2021, 6, 15)
+    assert award.date == ResumeDate(2021, 6, 15)
     assert award.awarder == "Acme"
     assert award.summary == "For being the best."
+
+
+# ----------------------------------------------------------------------
+# |
+# |  Certificate
+# |
+# ----------------------------------------------------------------------
+def test_CertificateRequiredOnly():
+    certificate = Certificate(name="A Certificate", issuer="An Issuer")
+
+    assert certificate.name == "A Certificate"
+    assert certificate.issuer == "An Issuer"
+    assert certificate.date is None
+    assert certificate.url is None
+
+
+# ----------------------------------------------------------------------
+def test_CertificateAll():
+    certificate = Certificate(
+        name="A Certificate",
+        date=ResumeDate(2023, 2),
+        url="https://example.com/certificate",
+        issuer="An Issuer",
+    )
+
+    assert certificate.date == ResumeDate(2023, 2)
+    assert certificate.url == "https://example.com/certificate"
 
 
 # ----------------------------------------------------------------------
@@ -437,13 +532,13 @@ def test_PublicationRequiredOnly():
     publication = Publication(
         name="A Paper",
         publisher="A Publisher",
-        releaseDate=Date(2021, 1, 1),
+        releaseDate=ResumeDate(2021, 1, 1),
         summary="About a thing.",
     )
 
     assert publication.name == "A Paper"
-    assert publication.releaseDate == Date(2021, 1, 1)
-    assert publication.website is None
+    assert publication.releaseDate == ResumeDate(2021, 1, 1)
+    assert publication.url is None
 
 
 # ----------------------------------------------------------------------
@@ -461,9 +556,11 @@ def test_SkillRequiredOnly():
 
 # ----------------------------------------------------------------------
 def test_SkillWithLevel():
-    skill = Skill(name="Python", level=SkillLevel.Advanced, keywords=["pytest"])
+    """A level is free-form text rather than one of a fixed set of values."""
 
-    assert skill.level is SkillLevel.Advanced
+    skill = Skill(name="Python", level="Wizard", keywords=["pytest"])
+
+    assert skill.level == "Wizard"
     assert skill.keywords == ["pytest"]
 
 
@@ -497,6 +594,39 @@ def test_ReferenceRequiredOnly():
 
 # ----------------------------------------------------------------------
 # |
+# |  Project
+# |
+# ----------------------------------------------------------------------
+def test_ProjectRequiredOnly():
+    project = Project(name="A Project", description="Something that was built.")
+
+    assert project.name == "A Project"
+    assert project.description == "Something that was built."
+    assert project.highlights == []
+    assert project.keywords == []
+    assert project.startDate is None
+    assert project.endDate is None
+    assert project.url is None
+    assert project.roles == []
+    assert project.entity is None
+    assert project.type is None
+
+
+# ----------------------------------------------------------------------
+# |
+# |  Meta
+# |
+# ----------------------------------------------------------------------
+def test_MetaRequiredOnly():
+    meta = Meta()
+
+    assert meta.canonical is None
+    assert meta.version is None
+    assert meta.lastModified is None
+
+
+# ----------------------------------------------------------------------
+# |
 # |  ResumeData
 # |
 # ----------------------------------------------------------------------
@@ -508,11 +638,13 @@ def test_ResumeDataRequiredOnly():
     assert resume_data.volunteer == []
     assert resume_data.education == []
     assert resume_data.awards == []
+    assert resume_data.certificates == []
     assert resume_data.publications == []
     assert resume_data.skills == []
     assert resume_data.languages == []
     assert resume_data.interests == []
     assert resume_data.references == []
+    assert resume_data.projects == []
     assert resume_data.meta is None
 
 
@@ -539,31 +671,34 @@ def test_ValidateMinimalContent():
 
 
 # ----------------------------------------------------------------------
-def test_ValidateCoercesDateStrings():
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("2020-01-02", ResumeDate(2020, 1, 2)),
+        ("2020-01", ResumeDate(2020, 1)),
+        ("2020", ResumeDate(2020)),
+        (2020, ResumeDate(2020)),
+        (CalendarDate(2020, 1, 2), ResumeDate(2020, 1, 2)),
+    ],
+)
+def test_ValidateCoercesDates(value: object, expected: ResumeDate):
+    """A date may omit the month and the day that follows it, and may be written as yaml resolves it."""
+
     resume_data = TypeAdapter(ResumeData).validate_python(
         {
             "basics": {"name": "Jane Doe"},
             "work": [
                 {
-                    "company": "Acme",
+                    "name": "Acme",
                     "position": "Engineer",
-                    "startDate": "2020-01-02",
+                    "startDate": value,
                     "summary": "s",
                 },
             ],
         },
     )
 
-    assert resume_data.work[0].startDate == Date(2020, 1, 2)
-
-
-# ----------------------------------------------------------------------
-def test_ValidateCoercesEnumStrings():
-    resume_data = TypeAdapter(ResumeData).validate_python(
-        {"basics": {"name": "Jane Doe"}, "skills": [{"name": "Python", "level": "Intermediate"}]},
-    )
-
-    assert resume_data.skills[0].level is SkillLevel.Intermediate
+    assert resume_data.work[0].startDate == expected
 
 
 # ----------------------------------------------------------------------
@@ -593,21 +728,19 @@ def test_ValidateMissingNestedValue():
 
 
 # ----------------------------------------------------------------------
-def test_ValidateInvalidSkillLevel():
-    with pytest.raises(ValidationError) as exec_info:
-        TypeAdapter(ResumeData).validate_python(
-            {"basics": {"name": "Jane Doe"}, "skills": [{"name": "Python", "level": "Wizard"}]},
-        )
-
-    errors = exec_info.value.errors()
-
-    assert len(errors) == 1
-    assert errors[0]["type"] == "enum"
-    assert errors[0]["loc"] == ("skills", 0, "level")
-
-
-# ----------------------------------------------------------------------
-def test_ValidateInvalidDate():
+@pytest.mark.parametrize(
+    "value",
+    [
+        "not-a-date",
+        "2020-1-2",  # each part is written with the number of digits that it has
+        "2020-13-01",  # a month that a calendar does not contain
+        "2020-02-30",  # a day that the month does not contain
+        "2020-01-02T09:00:00",
+        "",
+        [],
+    ],
+)
+def test_ValidateInvalidDate(value: object):
     with pytest.raises(ValidationError) as exec_info:
         TypeAdapter(ResumeData).validate_python(
             {
@@ -615,7 +748,7 @@ def test_ValidateInvalidDate():
                 "awards": [
                     {
                         "title": "t",
-                        "date": "not-a-date",
+                        "date": value,
                         "awarder": "a",
                         "summary": "s",
                     },
@@ -644,14 +777,13 @@ def test_ValidateIgnoresExtraValues():
 
 
 # ----------------------------------------------------------------------
-def test_ValidateMetaAcceptsArbitraryContent():
-    ta = TypeAdapter(ResumeData)
+def test_ValidateMetaValuesAreOptional():
+    """Every value within `meta` is optional, and the tooling configuration beside them is ignored."""
 
-    for meta in [None, "a string", 123, ["a", "list"], {"a": {"nested": "dict"}}]:
-        content = _MinimalResumeContent()
-        content["meta"] = meta
+    content = _MinimalResumeContent()
+    content["meta"] = {"version": "v1.0.0", "tooling_configuration": {"a": "value"}}
 
-        assert ta.validate_python(content).meta == meta
+    assert TypeAdapter(ResumeData).validate_python(content).meta == Meta(version="v1.0.0")
 
 
 # ----------------------------------------------------------------------
@@ -690,7 +822,7 @@ def test_FromFileYamlWithCommentsAndNativeDates(tmp_path: Path):
               name: Jane Doe  # This is another comment.
 
             work:
-              - company: Acme
+              - name: Acme
                 position: Engineer
                 startDate: 2020-01-02  # A native YAML date, not a string.
                 summary: Built things.
@@ -702,7 +834,7 @@ def test_FromFileYamlWithCommentsAndNativeDates(tmp_path: Path):
     resume_data = ResumeData.FromFile(filename)
 
     assert resume_data.basics.name == "Jane Doe"
-    assert resume_data.work[0].startDate == Date(2020, 1, 2)
+    assert resume_data.work[0].startDate == ResumeDate(2020, 1, 2)
 
 
 # ----------------------------------------------------------------------

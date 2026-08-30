@@ -97,7 +97,7 @@ ul {
 
 // A picture is the one value that a monochrome, text-only presentation has nothing to display it
 // as, so it is not displayed at all.
-.picture {
+.image {
     display: none;
 }
 
@@ -219,8 +219,10 @@ ul {
 }
 
 // The dates are displayed as a single range rather than as two values that are separated from one
-// another. The spaces are escaped so that they survive compression.
-.startDate::after {
+// another; a start date may stand alone (a project that names no end date, for example), so the
+// separator is displayed only when an end date follows it. The spaces are escaped so that they
+// survive compression.
+.startDate:has(+ .endDate)::after {
     content: "\00a0\2013\00a0";
 }
 
@@ -229,17 +231,22 @@ ul {
 .position,
 .studyType,
 .awards .title,
+.certificates .name,
 .publications .name {
     font-style: italic;
 }
 
 .area,
 .courses,
-.gpa {
+.score,
+.description,
+.entity,
+.type,
+.roles {
     color: @muted-color;
 }
 
-.gpa::before {
+.score::before {
     content: "GPA\00a0";
 }
 
@@ -303,8 +310,16 @@ ul {
     .icon-mixin("\f004");
 }
 
+.projects .section-header .icon {
+    .icon-mixin("\f1b3");
+}
+
 .awards .section-header .icon {
     .icon-mixin("\f091");
+}
+
+.certificates .section-header .icon {
+    .icon-mixin("\f0a3");
 }
 
 .publications .section-header .icon {
@@ -327,7 +342,7 @@ ul {
     .icon-mixin("\f0e0");
 }
 
-.website .icon {
+.url .icon {
     .icon-mixin("\f0c1");
 }
 
@@ -351,6 +366,10 @@ ul {
 
 .profile.codestats .icon {
     .icon-mixin("\f200");
+}
+
+.profile.instagram .icon {
+    .icon-mixin("\f16d");
 }
 
 // ----------------------------------------------------------------------

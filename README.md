@@ -64,7 +64,7 @@ uv run dbrownell_ResumeTools resume.json https://raw.githubusercontent.com/david
 Print the displayed content to a pdf from the browser itself (`Ctrl+P` / `Cmd+P`, then "Save as PDF"). The bundled stylesheets define `@media print` rules that compact the content for a printed page, so no separate command is involved. The pdf produced by each bundled stylesheet is linked in [the table below](#writing-a-stylesheet).
 
 ### Writing a stylesheet
-The generated html assigns a class to every value that names what the value is: the section that contains it (`work`, `education`, `skills`, ...), its role within that section (`section-header`, `entry`, `entry-body`, `detail`, ...), and the schema field that produced it (`position`, `startDate`, `gpa`, `keyword`, ...). Icons are empty `icon` elements that a stylesheet fills in through `::before`. That contract is documented in full at the top of [standard.less](https://github.com/davidbrownell/dbrownell_ResumeTools/blob/main/src/dbrownell_ResumeTools/themes/standard.less), and a stylesheet is free to lay those classes out however it likes.
+The generated html assigns a class to every value that names what the value is: the section that contains it (`work`, `education`, `skills`, ...), its role within that section (`section-header`, `entry`, `entry-body`, `detail`, ...), and the schema field that produced it (`position`, `startDate`, `score`, `keyword`, ...). Icons are empty `icon` elements that a stylesheet fills in through `::before`. That contract is documented in full at the top of [standard.less](https://github.com/davidbrownell/dbrownell_ResumeTools/blob/main/src/dbrownell_ResumeTools/themes/standard.less), and a stylesheet is free to lay those classes out however it likes.
 
 Six stylesheets are bundled to demonstrate the range. All of them are applied to the same `resume.json` and to the same generated html:
 
@@ -89,6 +89,8 @@ Six stylesheets are bundled to demonstrate the range. All of them are applied to
 <!-- Content below this delimiter will be copied to the generated README.md file. DO NOT REMOVE THIS COMMENT, as it will cause regeneration to fail. -->
 
 ## Installation
+
+Note that these steps are not required when invoking `dbrownell_ResumeTools` via `uvx`.
 
 | Installation Method | Command |
 | --- | --- |

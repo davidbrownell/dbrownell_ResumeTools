@@ -66,7 +66,9 @@
     .work,
     .education,
     .volunteer,
+    .projects,
     .awards,
+    .certificates,
     .publications {
         @rules();
     }
@@ -80,7 +82,9 @@
     .work,
     .education,
     .volunteer,
+    .projects,
     .awards,
+    .certificates,
     .publications,
     .languages,
     .interests,
@@ -168,7 +172,7 @@ ul {
 .basics {
     padding-top: 2.25rem;
 
-    .picture img {
+    .image img {
         width: 6rem;
         height: 6rem;
         object-fit: cover;
@@ -303,8 +307,10 @@ ul {
 }
 
 // The dates are displayed as a single range rather than as two values that are separated from one
-// another. The spaces are escaped so that they survive compression.
-.startDate::after {
+// another; a start date may stand alone (a project that names no end date, for example), so the
+// separator is displayed only when an end date follows it. The spaces are escaped so that they
+// survive compression.
+.startDate:has(+ .endDate)::after {
     content: "\00a0\2013\00a0";
 }
 
@@ -316,6 +322,7 @@ ul {
 .position,
 .studyType,
 .awards .title,
+.certificates .name,
 .publications .name {
     color: @accent-color;
     font-weight: 600;
@@ -323,12 +330,16 @@ ul {
 
 .area,
 .courses,
-.gpa {
+.score,
+.description,
+.entity,
+.type,
+.roles {
     color: @muted-color;
     font-size: .85em;
 }
 
-.gpa::before {
+.score::before {
     content: "GPA\00a0";
 }
 
@@ -430,8 +441,16 @@ ul {
     .solid-icon-mixin("\f4c4");
 }
 
+.projects .section-header .icon {
+    .solid-icon-mixin("\f1b3");
+}
+
 .awards .section-header .icon {
     .solid-icon-mixin("\f091");
+}
+
+.certificates .section-header .icon {
+    .solid-icon-mixin("\f0a3");
 }
 
 .publications .section-header .icon {
@@ -454,7 +473,7 @@ ul {
     .solid-icon-mixin("\f0e0");
 }
 
-.website .icon {
+.url .icon {
     .solid-icon-mixin("\f0c1");
 }
 
@@ -478,6 +497,10 @@ ul {
 
 .profile.codestats .icon {
     .solid-icon-mixin("\f11c");
+}
+
+.profile.instagram .icon {
+    .brand-icon-mixin("\f16d");
 }
 
 // ----------------------------------------------------------------------
@@ -550,7 +573,7 @@ ul {
     .basics {
         padding-top: 1.25rem;
 
-        .picture img {
+        .image img {
             width: 4rem;
             height: 4rem;
         }

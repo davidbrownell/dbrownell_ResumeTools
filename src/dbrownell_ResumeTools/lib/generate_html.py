@@ -1,4 +1,5 @@
 # noqa: D100
+import calendar
 import html
 import re
 import shutil
@@ -13,7 +14,6 @@ from dbrownell_ResumeTools.lib.json_resume_schema import ResumeData
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
-    from datetime import date as Date  # noqa: N812
     from pathlib import Path
 
     from dbrownell_Common.Streams.DoneManager import DoneManager
@@ -21,13 +21,16 @@ if TYPE_CHECKING:
     from dbrownell_ResumeTools.lib.json_resume_schema import (
         Award,
         Basics,
+        Certificate,
         Education,
         Interest,
         Language,
         Location,
         Profile,
+        Project,
         Publication,
         Reference,
+        ResumeDate,
         Skill,
         Volunteer,
         Work,
@@ -139,14 +142,14 @@ def _CreateContent(data: ResumeData) -> tuple[str, list[str]]:
             _CreateExperienceSection(
                 data.work,
                 rejected_uris,
-                name_attribute="company",
+                name_attribute="name",
                 name="work",
                 heading="Work Experience",
             ),
         )
 
     if data.education:
-        content.Append(_CreateEducationSection(data.education))
+        content.Append(_CreateEducationSection(data.education, rejected_uris))
 
     if data.volunteer:
         content.Append(
@@ -159,8 +162,14 @@ def _CreateContent(data: ResumeData) -> tuple[str, list[str]]:
             ),
         )
 
+    if data.projects:
+        content.Append(_CreateProjectsSection(data.projects, rejected_uris))
+
     if data.awards:
         content.Append(_CreateAwardsSection(data.awards))
+
+    if data.certificates:
+        content.Append(_CreateCertificatesSection(data.certificates, rejected_uris))
 
     if data.publications:
         content.Append(_CreatePublicationsSection(data.publications, rejected_uris))
@@ -390,6 +399,15 @@ def _CreateBulletList(classes: str, values: list[str]) -> _Element:
 
 
 # ----------------------------------------------------------------------
+def _CreateKeywordList(keywords: list[str]) -> _Element:
+    """Create the list that displays the keywords associated with a single entry."""
+
+    return _Element("ul", classes="keywords").Append(
+        _Element("li", classes="keyword").Html(_md.renderInline(keyword)) for keyword in keywords
+    )
+
+
+# ----------------------------------------------------------------------
 def _CreateLinkedText(text: str, uri: str | None) -> _Element:
     """Create the div that displays `text`, linked to `uri` when one is available."""
 
@@ -405,16 +423,16 @@ def _CreateLinkedText(text: str, uri: str | None) -> _Element:
 # |
 # ----------------------------------------------------------------------
 def _CreateBasicsSection(basics: Basics, rejected_uris: list[str]) -> _Element:
-    """Create the section that displays the picture, name, and label."""
+    """Create the section that displays the image, name, and label."""
 
     section = _Element("section", classes="section basics")
 
-    picture_uri = _SafeUri(basics.picture, rejected_uris)
+    image_uri = _SafeUri(basics.image, rejected_uris)
 
-    if picture_uri:
+    if image_uri:
         section.Append(
-            _Element("div", classes="picture").Append(
-                _Element("img", attributes={"src": picture_uri, "alt": f"Picture of {basics.name}"}),
+            _Element("div", classes="image").Append(
+                _Element("img", attributes={"src": image_uri, "alt": f"Picture of {basics.name}"}),
             ),
         )
 
@@ -441,10 +459,10 @@ def _CreateContactSection(basics: Basics, rejected_uris: list[str]) -> _Element:
             _CreateLinkDetail("email", f"mailto:{basics.email}", "email address", basics.email),
         )
 
-    website = _SafeUri(basics.website, rejected_uris)
+    url = _SafeUri(basics.url, rejected_uris)
 
-    if website:
-        details.append(_CreateLinkDetail("website", website, "website", website))
+    if url:
+        details.append(_CreateLinkDetail("url", url, "website", url))
 
     if basics.phone:
         details.append(_CreateLinkDetail("phone", f"tel:{basics.phone}", "phone number", basics.phone))
@@ -542,10 +560,7 @@ def _CreateKeywordSection(
         [
             _CreateEntry(
                 _Element("div", classes="name").Html(_md.renderInline(item.name)),
-                _Element("ul", classes="keywords").Append(
-                    _Element("li", classes="keyword").Html(_md.renderInline(keyword))
-                    for keyword in item.keywords
-                ),
+                _CreateKeywordList(item.keywords),
             )
             for item in items
         ],
@@ -574,29 +589,40 @@ def _CreateExperienceSection(
     entries: list[_Element] = []
 
     for experience in experiences:
-        entry_body = [
-            _Element("div", classes="position").Html(_md.renderInline(experience.position)),
-            _Element("div", classes="summary").Html(_md.render(experience.summary)),
+        entry_header = [
+            _CreateLinkedText(
+                getattr(experience, name_attribute),
+                _SafeUri(experience.url, rejected_uris),
+            ).AddClass(name_attribute),
         ]
+
+        # A location and a description qualify the entity that provided the experience; the schema
+        # associates them with work experience alone.
+        location = getattr(experience, "location", None)
+
+        if location:
+            entry_header.append(_Element("div", classes="location").Text(location))
+
+        entry_header += [
+            _Element("div", classes="startDate").Text(_ToDateString(experience.startDate)),
+            _Element("div", classes="endDate").Text(
+                _ToDateString(experience.endDate) if experience.endDate else "Present",
+            ),
+        ]
+
+        entry_body = [_Element("div", classes="position").Html(_md.renderInline(experience.position))]
+
+        description = getattr(experience, "description", None)
+
+        if description:
+            entry_body.append(_Element("div", classes="description").Html(_md.renderInline(description)))
+
+        entry_body.append(_Element("div", classes="summary").Html(_md.render(experience.summary)))
 
         if experience.highlights:
             entry_body.append(_CreateBulletList("highlights", experience.highlights))
 
-        entries.append(
-            _CreateEntry(
-                [
-                    _CreateLinkedText(
-                        getattr(experience, name_attribute),
-                        _SafeUri(experience.website, rejected_uris),
-                    ).AddClass(name_attribute),
-                    _Element("div", classes="startDate").Text(_ToDateString(experience.startDate)),
-                    _Element("div", classes="endDate").Text(
-                        _ToDateString(experience.endDate) if experience.endDate else "Present",
-                    ),
-                ],
-                entry_body,
-            ),
-        )
+        entries.append(_CreateEntry(entry_header, entry_body))
 
     return _CreateSection(name, heading, entries)
 
@@ -606,13 +632,15 @@ def _CreateExperienceSection(
 # |  Education
 # |
 # ----------------------------------------------------------------------
-def _CreateEducationSection(education: list[Education]) -> _Element:
+def _CreateEducationSection(education: list[Education], rejected_uris: list[str]) -> _Element:
     """Create the section that displays education."""
 
     entries: list[_Element] = []
 
     for item in education:
-        entry_header = [_Element("div", classes="institution").Html(_md.renderInline(item.institution))]
+        entry_header = [
+            _CreateLinkedText(item.institution, _SafeUri(item.url, rejected_uris)).AddClass("institution"),
+        ]
 
         if item.endDate:
             entry_header.append(_Element("div", classes="endDate").Text(_ToDateString(item.endDate)))
@@ -622,9 +650,9 @@ def _CreateEducationSection(education: list[Education]) -> _Element:
             _Element("div", classes="area").Html(_md.renderInline(item.area)),
         ]
 
-        if item.gpa:
+        if item.score:
             # The value is displayed without the label that introduces it; the stylesheet provides it.
-            entry_body.append(_Element("div", classes="gpa").Text(item.gpa))
+            entry_body.append(_Element("div", classes="score").Text(item.score))
 
         if item.courses:
             entry_body.append(_CreateBulletList("courses", item.courses))
@@ -663,6 +691,79 @@ def _CreateAwardsSection(awards: list[Award]) -> _Element:
 
 # ----------------------------------------------------------------------
 # |
+# |  Certificates
+# |
+# ----------------------------------------------------------------------
+def _CreateCertificatesSection(certificates: list[Certificate], rejected_uris: list[str]) -> _Element:
+    """Create the section that displays certificates."""
+
+    entries: list[_Element] = []
+
+    for item in certificates:
+        entry_header = [_Element("div", classes="issuer").Html(_md.renderInline(item.issuer))]
+
+        if item.date:
+            entry_header.append(_Element("div", classes="date").Text(_ToDateString(item.date)))
+
+        entries.append(
+            _CreateEntry(
+                entry_header,
+                _CreateLinkedText(item.name, _SafeUri(item.url, rejected_uris)).AddClass("name"),
+            ),
+        )
+
+    return _CreateSection("certificates", "Certificates", entries)
+
+
+# ----------------------------------------------------------------------
+# |
+# |  Projects
+# |
+# ----------------------------------------------------------------------
+def _CreateProjectsSection(projects: list[Project], rejected_uris: list[str]) -> _Element:
+    """Create the section that displays projects."""
+
+    entries: list[_Element] = []
+
+    for item in projects:
+        entry_header = [
+            _CreateLinkedText(item.name, _SafeUri(item.url, rejected_uris)).AddClass("name"),
+        ]
+
+        # Both dates are optional, and a project that names no end date is not necessarily still in
+        # progress, so each date is displayed only when it is available.
+        if item.startDate:
+            entry_header.append(_Element("div", classes="startDate").Text(_ToDateString(item.startDate)))
+
+        if item.endDate:
+            entry_header.append(_Element("div", classes="endDate").Text(_ToDateString(item.endDate)))
+
+        entry_body: list[_Element] = []
+
+        if item.entity:
+            entry_body.append(_Element("div", classes="entity").Html(_md.renderInline(item.entity)))
+
+        if item.type:
+            entry_body.append(_Element("div", classes="type").Text(item.type))
+
+        if item.roles:
+            entry_body.append(_CreateBulletList("roles", item.roles))
+
+        entry_body.append(_Element("div", classes="description").Html(_md.render(item.description)))
+
+        if item.highlights:
+            entry_body.append(_CreateBulletList("highlights", item.highlights))
+
+        if item.keywords:
+            entry_body.append(_CreateKeywordList(item.keywords))
+
+        entries.append(_CreateEntry(entry_header, entry_body))
+
+    return _CreateSection("projects", "Projects", entries)
+
+
+# ----------------------------------------------------------------------
+# |
 # |  Publications
 # |
 # ----------------------------------------------------------------------
@@ -679,7 +780,7 @@ def _CreatePublicationsSection(publications: list[Publication], rejected_uris: l
                     _Element("div", classes="releaseDate").Text(_ToDateString(item.releaseDate)),
                 ],
                 [
-                    _CreateLinkedText(item.name, _SafeUri(item.website, rejected_uris)).AddClass("name"),
+                    _CreateLinkedText(item.name, _SafeUri(item.url, rejected_uris)).AddClass("name"),
                     _Element("div", classes="summary").Html(_md.render(item.summary)),
                 ],
             )
@@ -740,10 +841,17 @@ def _CreateReferencesSection(references: list[Reference]) -> _Element:
 # |  Utilities
 # |
 # ----------------------------------------------------------------------
-def _ToDateString(value: Date) -> str:
-    """Convert a date into the string used when displaying content."""
+def _ToDateString(value: ResumeDate) -> str:
+    """Convert a date into the string used when displaying content.
 
-    return f"{value:%B %Y}"
+    The month is optional within the schema, so a date that names none displays the year alone
+    rather than a month that was never provided.
+    """
+
+    if value.month is None:
+        return str(value.year)
+
+    return f"{calendar.month_name[value.month]} {value.year}"
 
 
 # ----------------------------------------------------------------------

@@ -86,6 +86,7 @@ def _FullResumeContent() -> dict:
         "volunteer": [
             {
                 "organization": "Helpers",
+                "location": "Athens, GA",
                 "position": "Volunteer",
                 "url": "https://helpers.example.com",
                 "startDate": "2019-05-06",
@@ -97,6 +98,7 @@ def _FullResumeContent() -> dict:
         "education": [
             {
                 "institution": "Georgia Tech",
+                "location": "Atlanta, GA",
                 "url": "https://gatech.example.com",
                 "area": "Computer Science",
                 "studyType": "Bachelor",
@@ -214,6 +216,7 @@ def _FullResumeData() -> ResumeData:
         volunteer=[
             Volunteer(
                 organization="Helpers",
+                location="Athens, GA",
                 position="Volunteer",
                 url="https://helpers.example.com",
                 startDate=ResumeDate(2019, 5, 6),
@@ -225,6 +228,7 @@ def _FullResumeData() -> ResumeData:
         education=[
             Education(
                 institution="Georgia Tech",
+                location="Atlanta, GA",
                 url="https://gatech.example.com",
                 area="Computer Science",
                 studyType="Bachelor",
@@ -454,6 +458,7 @@ def test_VolunteerRequiredOnly():
     )
 
     assert volunteer.organization == "Helpers"
+    assert volunteer.location is None
     assert volunteer.url is None
     assert volunteer.endDate is None
     assert volunteer.highlights == []
@@ -470,6 +475,7 @@ def test_EducationRequiredOnly():
     assert education.institution == "Georgia Tech"
     assert education.area == "Computer Science"
     assert education.studyType == "Bachelor"
+    assert education.location is None
     assert education.url is None
     assert education.startDate is None
     assert education.endDate is None

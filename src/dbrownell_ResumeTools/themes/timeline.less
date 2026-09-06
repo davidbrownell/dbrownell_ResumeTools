@@ -294,10 +294,13 @@ ul {
     }
 }
 
+// The location qualifies the entity that names the entry as the dates do, so it is displayed as
+// they are; the margin that separates them from one another separates it from them as well.
 .startDate,
 .endDate,
 .date,
-.releaseDate {
+.releaseDate,
+.entry-header .location {
     .condensed-text-mixin();
 
     flex: 0 0 auto;

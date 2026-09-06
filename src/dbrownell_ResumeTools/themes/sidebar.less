@@ -344,14 +344,23 @@ ul {
     }
 }
 
+// The location qualifies the entity that names the entry as the dates do, so it is displayed as
+// they are.
 .startDate,
 .endDate,
 .date,
-.releaseDate {
+.releaseDate,
+.entry-header .location {
     flex: 0 0 auto;
     font-size: .78rem;
     color: @muted-color;
     letter-spacing: .03em;
+}
+
+// Nothing within the header is separated by a gap, as that would also separate the dates that are
+// read as a range, so the location is separated from the dates that follow it.
+.entry-header .location {
+    margin-right: 1rem;
 }
 
 // A start date may stand alone (a project that names no end date, for example), so the separator

@@ -210,12 +210,21 @@ ul {
     }
 }
 
+// The location qualifies the entity that names the entry as the dates do, so it is displayed as
+// they are.
 .startDate,
 .endDate,
 .date,
-.releaseDate {
+.releaseDate,
+.entry-header .location {
     flex: 0 0 auto;
     color: @muted-color;
+}
+
+// Nothing within the header is separated by a gap, as that would also separate the dates that are
+// read as a range, so the location is separated from the dates that follow it.
+.entry-header .location {
+    margin-right: 1rem;
 }
 
 // The dates are displayed as a single range rather than as two values that are separated from one

@@ -40,6 +40,7 @@
 
     <volunteer *>:
         <organization string>
+        <location string ?> # e.g. Menlo Park, CA
         <position string>
         <url uri ?>
         <startDate Date>
@@ -49,6 +50,7 @@
 
     <education *>:
         <institution string>
+        <location string ?> # e.g. Menlo Park, CA
         <url uri ?>
         <area string>
         <studyType string>

@@ -60,6 +60,7 @@ work:
 
 volunteer:
   - organization: Code for the Triangle
+    location: Durham, NC
     position: Technical Mentor
     url: https://codeforthetriangle.example.org
     startDate: 2020-09-01
@@ -71,6 +72,7 @@ volunteer:
 
 education:
   - institution: Georgia Institute of Technology
+    location: Atlanta, GA
     url: https://www.gatech.edu
     area: Computer Science
     studyType: Master of Science

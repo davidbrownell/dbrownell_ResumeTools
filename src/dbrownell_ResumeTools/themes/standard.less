@@ -350,6 +350,14 @@ ul {
     content: "\00a0\2013";
 }
 
+// The location qualifies the entity that names the entry rather than being a value of the same
+// weight, so it is displayed as the dates that follow it are. It remains on a line of its own, as
+// nothing separates it from those dates when they share one.
+.entry-header .location {
+    font-size: .85em;
+    color: @muted-color;
+}
+
 // The values within these details are displayed as flex items so that the line breaks between them
 // in the markup are not displayed as spaces that would precede the separator.
 .location .value,

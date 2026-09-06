@@ -71,6 +71,7 @@ FULL_CONTENT = """\
         summary: Did other work.
     education:
       - institution: Georgia Tech
+        location: Atlanta, GA
         url: https://gatech.example.com
         area: Computer Science
         studyType: Master of Science
@@ -78,12 +79,13 @@ FULL_CONTENT = """\
         score: "3.9"
         courses:
           - CS 6210 - Advanced Operating Systems
-      # The url, end date, score, and courses are omitted here.
+      # The location, url, end date, score, and courses are omitted here.
       - institution: UNC
         area: Computer Science
         studyType: Bachelor of Science
     volunteer:
       - organization: Code for the Triangle
+        location: Durham, NC
         position: Mentor
         url: https://triangle.example.org
         startDate: 2020-09-01
@@ -671,6 +673,7 @@ def test_Volunteer(tmp_path: Path):
                 <div class="organization">
                   <a href="https://triangle.example.org" alt="Code for the Triangle" target="_blank">Code for the Triangle</a>
                 </div>
+                <div class="location">Durham, NC</div>
                 <div class="startDate">September 2020</div>
                 <div class="endDate">May 2023</div>
               </div>
@@ -706,6 +709,7 @@ def test_Education(tmp_path: Path):
             <div class="institution">
               <a href="https://gatech.example.com" alt="Georgia Tech" target="_blank">Georgia Tech</a>
             </div>
+            <div class="location">Atlanta, GA</div>
             <div class="endDate">May 2014</div>
           </div>
           <div class="entry-body">

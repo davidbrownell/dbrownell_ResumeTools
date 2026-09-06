@@ -138,6 +138,7 @@ class Volunteer:
     """<volunteer>"""  # noqa: D400, D415
 
     organization: str
+    location: str | None = None  # e.g. Menlo Park, CA
     position: str
     url: Uri | None = None
     startDate: Date  # noqa: N815
@@ -152,6 +153,7 @@ class Education:
     """<education>"""  # noqa: D400, D415
 
     institution: str
+    location: str | None = None  # e.g. Menlo Park, CA
     url: Uri | None = None
     area: str
     studyType: str  # noqa: N815

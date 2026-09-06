@@ -596,12 +596,8 @@ def _CreateExperienceSection(
             ).AddClass(name_attribute),
         ]
 
-        # A location and a description qualify the entity that provided the experience; the schema
-        # associates them with work experience alone.
-        location = getattr(experience, "location", None)
-
-        if location:
-            entry_header.append(_Element("div", classes="location").Text(location))
+        if experience.location:
+            entry_header.append(_Element("div", classes="location").Text(experience.location))
 
         entry_header += [
             _Element("div", classes="startDate").Text(_ToDateString(experience.startDate)),
@@ -612,6 +608,8 @@ def _CreateExperienceSection(
 
         entry_body = [_Element("div", classes="position").Html(_md.renderInline(experience.position))]
 
+        # A description qualifies the entity that provided the experience; the schema associates it
+        # with work experience alone.
         description = getattr(experience, "description", None)
 
         if description:
@@ -641,6 +639,9 @@ def _CreateEducationSection(education: list[Education], rejected_uris: list[str]
         entry_header = [
             _CreateLinkedText(item.institution, _SafeUri(item.url, rejected_uris)).AddClass("institution"),
         ]
+
+        if item.location:
+            entry_header.append(_Element("div", classes="location").Text(item.location))
 
         if item.endDate:
             entry_header.append(_Element("div", classes="endDate").Text(_ToDateString(item.endDate)))

@@ -13,6 +13,7 @@ from typer.core import TyperGroup
 
 from dbrownell_Common.Streams.DoneManager import DoneManager, Flags as DoneManagerFlags
 
+from dbrownell_ResumeTools import __version__
 from dbrownell_ResumeTools.lib.generate_html import GenerateHtml as GenerateHtmlImpl
 from dbrownell_ResumeTools.lib.postprocess_markdown import PostprocessMarkdown as PostprocessMarkdownImpl
 from dbrownell_ResumeTools.lib.serve import DEFAULT_HOST, DEFAULT_PORT, Serve as ServeImpl
@@ -33,6 +34,13 @@ app = typer.Typer(
     pretty_exceptions_show_locals=False,
     pretty_exceptions_enable=False,
 )
+
+
+# ----------------------------------------------------------------------
+def _OnVersion(value: bool) -> None:  # noqa: FBT001
+    if value:
+        typer.echo(f"dbrownell_ResumeTools v{__version__}")
+        raise typer.Exit()
 
 
 # ----------------------------------------------------------------------
@@ -88,6 +96,14 @@ def GenerateHtml(
             help=f"Port used when '--serve' is specified; 0 selects any available port. Defaults to {DEFAULT_PORT} or, when '--browser' is specified, any available port.",
         ),
     ] = None,
+    version: Annotated[  # noqa: ARG001, FBT002
+        bool,
+        typer.Option(
+            "--version",
+            callback=_OnVersion,
+            is_eager=True,
+        ),
+    ] = False,
     verbose: Annotated[  # noqa: FBT002
         bool,
         typer.Option("--verbose", help="Write verbose information to the terminal."),

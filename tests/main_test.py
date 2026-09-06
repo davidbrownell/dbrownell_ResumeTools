@@ -9,7 +9,7 @@ import pytest
 
 from typer.testing import CliRunner
 
-from dbrownell_ResumeTools import __main__ as main_mod
+from dbrownell_ResumeTools import __main__ as main_mod, __version__
 from dbrownell_ResumeTools.__main__ import app
 from dbrownell_ResumeTools.lib.serve import DEFAULT_HOST, DEFAULT_PORT
 
@@ -126,6 +126,42 @@ def test_Help():
     assert result.exit_code == 0, result.output
     assert "Usage:" in result.output
     assert "--serve" in result.output
+
+
+# ----------------------------------------------------------------------
+def test_Version():
+    result = runner.invoke(app, ["--version"])
+
+    assert result.exit_code == 0, result.output
+    assert result.output == f"dbrownell_ResumeTools v{__version__}\n"
+
+
+# ----------------------------------------------------------------------
+def test_VersionWithArguments(tmp_path: Path):
+    """The version is displayed rather than content generated, even when arguments are provided."""
+
+    content_filename = _CreateResumeFile(tmp_path)
+    css_filename = _CreateCssFile(tmp_path)
+    output_directory = tmp_path / "output"
+
+    result = runner.invoke(
+        app,
+        [str(content_filename), str(css_filename), str(output_directory), "--version"],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert result.output == f"dbrownell_ResumeTools v{__version__}\n"
+    assert not output_directory.is_dir()
+
+
+# ----------------------------------------------------------------------
+def test_VersionWithInvalidArguments(tmp_path: Path):
+    """The version is eager, so it is displayed before arguments are validated."""
+
+    result = runner.invoke(app, [str(tmp_path / "does_not_exist.yaml"), "--version"])
+
+    assert result.exit_code == 0, result.output
+    assert result.output == f"dbrownell_ResumeTools v{__version__}\n"
 
 
 # ----------------------------------------------------------------------

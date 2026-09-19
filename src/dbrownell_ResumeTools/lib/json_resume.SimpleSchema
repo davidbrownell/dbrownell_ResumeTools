@@ -33,20 +33,34 @@
         <description string ?> # e.g. Social Media Company
         <position string>
         <url uri ?>
-        <startDate Date>
+        <startDate Date ?>
         <endDate Date ?>
         <summary string>
         <highlights string *>
+
+        # Employment that was interrupted and later resumed; the values above are written once
+        # rather than once per period of employment. Either <startDate>/<endDate> or <tenures>
+        # describes when the employment took place; the two cannot be combined, and <endDate>
+        # cannot be provided without the <startDate> that it ends. The tenures are displayed
+        # newest first, so they may be written in any order.
+        <tenures *>:
+            <startDate Date>
+            <endDate Date ?>
 
     <volunteer *>:
         <organization string>
         <location string ?> # e.g. Menlo Park, CA
         <position string>
         <url uri ?>
-        <startDate Date>
+        <startDate Date ?>
         <endDate Date ?>
         <summary string>
         <highlights string *>
+
+        # See <work.tenures>.
+        <tenures *>:
+            <startDate Date>
+            <endDate Date ?>
 
     <education *>:
         <institution string>
@@ -55,7 +69,7 @@
         <area string>
         <studyType string>
         <startDate Date ?>
-        <endDate Date ?>
+        <endDate Date ?> # cannot be provided without <startDate>
         <score string ?> # grade point average
         <courses string *>
 
@@ -101,7 +115,7 @@
         <highlights string *>
         <keywords string *>
         <startDate Date ?>
-        <endDate Date ?>
+        <endDate Date ?> # cannot be provided without <startDate>
         <url uri ?>
         <roles string *>
         <entity string ?> # e.g. greenpeace

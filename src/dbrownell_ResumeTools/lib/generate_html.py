@@ -599,11 +599,14 @@ def _CreateExperienceSection(
         if experience.location:
             entry_header.append(_Element("div", classes="location").Text(experience.location))
 
+        # Experience that was interrupted and later resumed displays one range per period of
+        # employment; experience that spans a single tenure displays a single range.
         entry_header += [
-            _Element("div", classes="startDate").Text(_ToDateString(experience.startDate)),
-            _Element("div", classes="endDate").Text(
-                _ToDateString(experience.endDate) if experience.endDate else "Present",
-            ),
+            _CreateDateRange(
+                tenure.startDate,
+                _ToDateString(tenure.endDate) if tenure.endDate else "Present",
+            )
+            for tenure in experience.EnumTenures()
         ]
 
         entry_body = [_Element("div", classes="position").Html(_md.renderInline(experience.position))]
@@ -731,13 +734,15 @@ def _CreateProjectsSection(projects: list[Project], rejected_uris: list[str]) ->
             _CreateLinkedText(item.name, _SafeUri(item.url, rejected_uris)).AddClass("name"),
         ]
 
-        # Both dates are optional, and a project that names no end date is not necessarily still in
-        # progress, so each date is displayed only when it is available.
+        # The dates are optional, and a project that names no end date is not necessarily still in
+        # progress, so an absent end date is displayed as nothing rather than as 'Present'.
         if item.startDate:
-            entry_header.append(_Element("div", classes="startDate").Text(_ToDateString(item.startDate)))
-
-        if item.endDate:
-            entry_header.append(_Element("div", classes="endDate").Text(_ToDateString(item.endDate)))
+            entry_header.append(
+                _CreateDateRange(
+                    item.startDate,
+                    _ToDateString(item.endDate) if item.endDate else None,
+                ),
+            )
 
         entry_body: list[_Element] = []
 
@@ -841,6 +846,26 @@ def _CreateReferencesSection(references: list[Reference]) -> _Element:
 # |
 # |  Utilities
 # |
+# ----------------------------------------------------------------------
+def _CreateDateRange(start_date: ResumeDate, end_date_text: str | None) -> _Element:
+    """Group the dates of one period of time into the range that displays them.
+
+    The dates are grouped so that a stylesheet displays them as the single value that they are read
+    as, and so that it can separate one period of time from the next when an entry names several.
+    The end date is provided as text because each value that names a period of time displays an
+    absent one differently.
+    """
+
+    element = _Element("div", classes="date-range").Append(
+        _Element("div", classes="startDate").Text(_ToDateString(start_date)),
+    )
+
+    if end_date_text:
+        element.Append(_Element("div", classes="endDate").Text(end_date_text))
+
+    return element
+
+
 # ----------------------------------------------------------------------
 def _ToDateString(value: ResumeDate) -> str:
     """Convert a date into the string used when displaying content.

@@ -28,6 +28,7 @@ from dbrownell_ResumeTools.lib.json_resume_schema import (
     ResumeData,
     ResumeDate,
     Skill,
+    Tenure,
     Volunteer,
     Work,
 )
@@ -77,8 +78,10 @@ def _FullResumeContent() -> dict:
                 "description": "A maker of things",
                 "position": "Engineer",
                 "url": "https://acme.example.com",
-                "startDate": "2020-01-02",
-                "endDate": "2022-03-04",
+                "tenures": [
+                    {"startDate": "2020-01-02", "endDate": "2022-03-04"},
+                    {"startDate": "2023-07-08"},
+                ],
                 "summary": "Built things.",
                 "highlights": ["Highlight 1", "Highlight 2"],
             },
@@ -207,8 +210,10 @@ def _FullResumeData() -> ResumeData:
                 description="A maker of things",
                 position="Engineer",
                 url="https://acme.example.com",
-                startDate=ResumeDate(2020, 1, 2),
-                endDate=ResumeDate(2022, 3, 4),
+                tenures=[
+                    Tenure(startDate=ResumeDate(2020, 1, 2), endDate=ResumeDate(2022, 3, 4)),
+                    Tenure(startDate=ResumeDate(2023, 7, 8)),
+                ],
                 summary="Built things.",
                 highlights=["Highlight 1", "Highlight 2"],
             ),
@@ -441,7 +446,184 @@ def test_WorkRequiredOnly():
     assert work.description is None
     assert work.url is None
     assert work.endDate is None
+    assert work.tenures == []
     assert work.highlights == []
+
+
+# ----------------------------------------------------------------------
+def test_WorkWithTenures():
+    work = Work(
+        name="Acme",
+        position="Engineer",
+        tenures=[
+            Tenure(startDate=ResumeDate(2020, 1, 2), endDate=ResumeDate(2022, 3, 4)),
+            Tenure(startDate=ResumeDate(2023, 7, 8)),
+        ],
+        summary="Built things.",
+    )
+
+    assert work.startDate is None
+    assert work.endDate is None
+    assert work.tenures[0] == Tenure(startDate=ResumeDate(2020, 1, 2), endDate=ResumeDate(2022, 3, 4))
+    assert work.tenures[1] == Tenure(startDate=ResumeDate(2023, 7, 8), endDate=None)
+
+
+# ----------------------------------------------------------------------
+def test_EnumTenuresWithDates():
+    """Dates written by the experience itself are enumerated as the single tenure that they describe."""
+
+    work = Work(
+        name="Acme",
+        position="Engineer",
+        startDate=ResumeDate(2020, 1, 2),
+        endDate=ResumeDate(2022, 3, 4),
+        summary="Built things.",
+    )
+
+    assert list(work.EnumTenures()) == [
+        Tenure(startDate=ResumeDate(2020, 1, 2), endDate=ResumeDate(2022, 3, 4)),
+    ]
+
+
+# ----------------------------------------------------------------------
+def test_EnumTenuresWithTenures():
+    """Tenures are enumerated newest first no matter the order that they were written in."""
+
+    volunteer = Volunteer(
+        organization="Helpers",
+        position="Volunteer",
+        tenures=[
+            Tenure(startDate=ResumeDate(2016, 1, 1), endDate=ResumeDate(2017, 12, 31)),
+            Tenure(startDate=ResumeDate(2021, 1, 1)),
+        ],
+        summary="Helped out.",
+    )
+
+    assert list(volunteer.EnumTenures()) == [
+        Tenure(startDate=ResumeDate(2021, 1, 1), endDate=None),
+        Tenure(startDate=ResumeDate(2016, 1, 1), endDate=ResumeDate(2017, 12, 31)),
+    ]
+
+
+# ----------------------------------------------------------------------
+def test_EnumTenuresOrdersDatesThatOmitTheMonth():
+    """A date that names no month is ordered before one that names it within the same year."""
+
+    work = Work(
+        name="Acme",
+        position="Engineer",
+        tenures=[
+            Tenure(startDate=ResumeDate(2020), endDate=ResumeDate(2020, 6, 30)),
+            Tenure(startDate=ResumeDate(2020, 7, 1), endDate=ResumeDate(2021, 12, 31)),
+            Tenure(startDate=ResumeDate(2019, 5, 4), endDate=ResumeDate(2019, 12, 31)),
+        ],
+        summary="Built things.",
+    )
+
+    assert [tenure.startDate for tenure in work.EnumTenures()] == [
+        ResumeDate(2020, 7, 1),
+        ResumeDate(2020),
+        ResumeDate(2019, 5, 4),
+    ]
+
+
+# ----------------------------------------------------------------------
+@pytest.mark.parametrize("dates", [{"startDate": "2020-01-02"}, {"endDate": "2022-03-04"}])
+def test_ValidateTenuresAndDatesCannotBeCombined(dates: dict):
+    """The two ways of describing periods of time are alternatives rather than complements."""
+
+    with pytest.raises(
+        ValidationError,
+        match=re.escape(
+            "Value error, 'startDate' and 'endDate' describe a single tenure and cannot be combined with 'tenures'.",
+        ),
+    ):
+        TypeAdapter(ResumeData).validate_python(
+            {
+                "basics": {"name": "Jane Doe"},
+                "work": [
+                    {
+                        "name": "Acme",
+                        "position": "Engineer",
+                        "summary": "s",
+                        "tenures": [{"startDate": "2023-07-08"}],
+                        **dates,
+                    },
+                ],
+            },
+        )
+
+
+# ----------------------------------------------------------------------
+@pytest.mark.parametrize(
+    "section",
+    [
+        {"work": [{"name": "Acme", "position": "Engineer", "summary": "s", "endDate": "2022-03-04"}]},
+        {
+            "volunteer": [
+                {"organization": "Helpers", "position": "Volunteer", "summary": "s", "endDate": "2022-03-04"},
+            ],
+        },
+        {
+            "education": [
+                {
+                    "institution": "Georgia Tech",
+                    "area": "Computer Science",
+                    "studyType": "Bachelor",
+                    "endDate": "2022-03-04",
+                },
+            ],
+        },
+        {"projects": [{"name": "A Project", "description": "d", "endDate": "2022-03-04"}]},
+    ],
+    ids=["work", "volunteer", "education", "projects"],
+)
+def test_ValidateEndDateRequiresStartDate(section: dict):
+    """A date that ends a period of time is meaningless without the date that began it."""
+
+    with pytest.raises(
+        ValidationError,
+        match=re.escape("Value error, 'endDate' cannot be provided without 'startDate'."),
+    ):
+        TypeAdapter(ResumeData).validate_python({"basics": {"name": "Jane Doe"}, **section})
+
+
+# ----------------------------------------------------------------------
+def test_ValidateTenureEndDateRequiresStartDate():
+    with pytest.raises(ValidationError) as exec_info:
+        TypeAdapter(ResumeData).validate_python(
+            {
+                "basics": {"name": "Jane Doe"},
+                "work": [
+                    {
+                        "name": "Acme",
+                        "position": "Engineer",
+                        "tenures": [{"endDate": "2022-03-04"}],
+                        "summary": "s",
+                    },
+                ],
+            },
+        )
+
+    errors = exec_info.value.errors()
+
+    assert len(errors) == 1
+    assert errors[0]["type"] == "missing"
+    assert errors[0]["loc"] == ("work", 0, "tenures", 0, "startDate")
+
+
+# ----------------------------------------------------------------------
+def test_ValidateTenuresOrDatesAreRequired():
+    with pytest.raises(
+        ValidationError,
+        match=re.escape("Value error, 'startDate' or 'tenures' must be provided."),
+    ):
+        TypeAdapter(ResumeData).validate_python(
+            {
+                "basics": {"name": "Jane Doe"},
+                "volunteer": [{"organization": "Helpers", "position": "Volunteer", "summary": "s"}],
+            },
+        )
 
 
 # ----------------------------------------------------------------------
@@ -461,6 +643,7 @@ def test_VolunteerRequiredOnly():
     assert volunteer.location is None
     assert volunteer.url is None
     assert volunteer.endDate is None
+    assert volunteer.tenures == []
     assert volunteer.highlights == []
 
 

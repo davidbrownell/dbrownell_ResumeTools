@@ -69,12 +69,21 @@ FULL_CONTENT = """\
         startDate: 2014-06-15
         endDate: 2019-02-28
         summary: Did other work.
+      # Employment that was interrupted and later resumed.
+      - name: Fabrikam
+        position: Junior Engineer
+        tenures:
+          - startDate: 2010-02-01
+            endDate: 2011-03-04
+          - startDate: 2012-05-06
+        summary: Did early work.
     education:
       - institution: Georgia Tech
         location: Atlanta, GA
         url: https://gatech.example.com
         area: Computer Science
         studyType: Master of Science
+        startDate: 2012-08-20
         endDate: 2014-05-03
         score: "3.9"
         courses:
@@ -614,8 +623,10 @@ def test_Work(tmp_path: Path):
               <a href="https://northwind.example.com" alt="Northwind" target="_blank">Northwind</a>
             </div>
             <div class="location">Raleigh, NC</div>
-            <div class="startDate">March 2019</div>
-            <div class="endDate">Present</div>
+            <div class="date-range">
+              <div class="startDate">March 2019</div>
+              <div class="endDate">Present</div>
+            </div>
           </div>
           <div class="entry-body">
             <div class="position">Engineer</div>
@@ -637,8 +648,10 @@ def test_Work(tmp_path: Path):
         <div class="entry">
           <div class="entry-header">
             <div class="name">Contoso</div>
-            <div class="startDate">June 2014</div>
-            <div class="endDate">February 2019</div>
+            <div class="date-range">
+              <div class="startDate">June 2014</div>
+              <div class="endDate">February 2019</div>
+            </div>
           </div>
           <div class="entry-body">
             <div class="position">Senior Engineer</div>
@@ -649,9 +662,35 @@ def test_Work(tmp_path: Path):
         4,
     )
 
+    # Experience that was interrupted displays one range per period of employment, newest first,
+    # even though the content writes them oldest first
+    interrupted = _Fragment(
+        """\
+        <div class="entry">
+          <div class="entry-header">
+            <div class="name">Fabrikam</div>
+            <div class="date-range">
+              <div class="startDate">May 2012</div>
+              <div class="endDate">Present</div>
+            </div>
+            <div class="date-range">
+              <div class="startDate">February 2010</div>
+              <div class="endDate">March 2011</div>
+            </div>
+          </div>
+          <div class="entry-body">
+            <div class="position">Junior Engineer</div>
+            <div class="summary"><p>Did early work.</p></div>
+          </div>
+        </div>
+        """,
+        4,
+    )
+
     assert '<span class="heading">Work Experience</span>' in content
     assert current in content
     assert previous in content
+    assert interrupted in content
 
 
 # ----------------------------------------------------------------------
@@ -674,8 +713,10 @@ def test_Volunteer(tmp_path: Path):
                   <a href="https://triangle.example.org" alt="Code for the Triangle" target="_blank">Code for the Triangle</a>
                 </div>
                 <div class="location">Durham, NC</div>
-                <div class="startDate">September 2020</div>
-                <div class="endDate">May 2023</div>
+                <div class="date-range">
+                  <div class="startDate">September 2020</div>
+                  <div class="endDate">May 2023</div>
+                </div>
               </div>
               <div class="entry-body">
                 <div class="position">Mentor</div>
@@ -838,8 +879,10 @@ def test_Projects(tmp_path: Path):
             <div class="name">
               <a href="https://example.com/ledger" alt="Ledger" target="_blank">Ledger</a>
             </div>
-            <div class="startDate">January 2021</div>
-            <div class="endDate">June 2023</div>
+            <div class="date-range">
+              <div class="startDate">January 2021</div>
+              <div class="endDate">June 2023</div>
+            </div>
           </div>
           <div class="entry-body">
             <div class="entity">Northwind</div>
@@ -866,7 +909,9 @@ def test_Projects(tmp_path: Path):
         <div class="entry">
           <div class="entry-header">
             <div class="name">The Cost of a Build</div>
-            <div class="startDate">2022</div>
+            <div class="date-range">
+              <div class="startDate">2022</div>
+            </div>
           </div>
           <div class="entry-body">
             <div class="description"><p>A talk.</p></div>
@@ -879,35 +924,6 @@ def test_Projects(tmp_path: Path):
     assert '<span class="heading">Projects</span>' in content
     assert with_optional_values in content
     assert without_optional_values in content
-
-
-# ----------------------------------------------------------------------
-def test_ProjectWithAnEndDateAlone(tmp_path: Path):
-    """An end date is displayed on its own when a project names no start date."""
-
-    content = _GenerateContent(
-        tmp_path,
-        """\
-        basics:
-          name: Sam Taylor
-        projects:
-          - name: Ledger
-            description: An event store.
-            endDate: 2023-06-30
-        """,
-    )
-
-    expected = _Fragment(
-        """\
-        <div class="entry-header">
-          <div class="name">Ledger</div>
-          <div class="endDate">June 2023</div>
-        </div>
-        """,
-        5,
-    )
-
-    assert expected in content
 
 
 # ----------------------------------------------------------------------
@@ -1215,8 +1231,10 @@ def test_UnsafeCompanyIsDisplayedWithoutALink(tmp_path: Path):
         <div class="entry">
           <div class="entry-header">
             <div class="name">Contoso</div>
-            <div class="startDate">June 2014</div>
-            <div class="endDate">February 2019</div>
+            <div class="date-range">
+              <div class="startDate">June 2014</div>
+              <div class="endDate">February 2019</div>
+            </div>
           </div>
           <div class="entry-body">
             <div class="position">Engineer</div>

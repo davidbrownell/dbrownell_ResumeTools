@@ -24,6 +24,7 @@ from dbrownell_ResumeTools.lib.json_resume_schema import (
     ResumeData,
     ResumeDate,
     Skill,
+    Tenure,
     Volunteer,
     Work,
 )
@@ -55,6 +56,7 @@ ALL_DATACLASSES = [
     ResumeData,
     ResumeDate,
     Skill,
+    Tenure,
     Volunteer,
     Work,
 ]
@@ -195,12 +197,24 @@ def test_FullSampleDemonstratesPartialDates(stem: str):
 
 # ----------------------------------------------------------------------
 @pytest.mark.parametrize("stem", FULL_SAMPLE_STEMS)
+def test_FullSampleDemonstratesTenures(stem: str):
+    """The full samples describe experience with dates and with tenures."""
+
+    resume_data = ResumeData.FromFile(SAMPLES_DIR / f"{stem}{ALL_SAMPLE_SUFFIXES[0]}")
+
+    for items in (resume_data.work, resume_data.volunteer):
+        assert any(item.startDate is not None for item in items)
+        assert any(len(item.tenures) > 1 for item in items)
+
+
+# ----------------------------------------------------------------------
+@pytest.mark.parametrize("stem", FULL_SAMPLE_STEMS)
 def test_FullSampleDemonstratesOptionalOmissions(stem: str):
     """The full samples demonstrate that optional values may be omitted."""
 
     resume_data = ResumeData.FromFile(SAMPLES_DIR / f"{stem}{ALL_SAMPLE_SUFFIXES[0]}")
 
-    assert any(item.endDate is None for item in resume_data.work)
+    assert any(tenure.endDate is None for item in resume_data.work for tenure in item.EnumTenures())
     assert any(item.date is None for item in resume_data.certificates)
     assert any(item.level is None for item in resume_data.skills)
     assert any(item.keywords == [] for item in resume_data.interests)

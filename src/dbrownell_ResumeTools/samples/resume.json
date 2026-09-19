@@ -44,7 +44,15 @@
       "description": "Logistics software for regional carriers",
       "position": "Principal Software Engineer",
       "url": "https://northwind.example.com",
-      "startDate": "2019-03-01",
+      "tenures": [
+        {
+          "startDate": "2019-03-01",
+          "endDate": "2021-08-31"
+        },
+        {
+          "startDate": "2022-05-04"
+        }
+      ],
       "summary": "Technical lead for the platform group that owns build, release, and observability tooling.",
       "highlights": [
         "Cut median CI wall-clock time from 42 minutes to 9 by introducing remote build caching.",
@@ -78,6 +86,21 @@
         "Led a twelve-week curriculum on version control and code review.",
         "Shipped a volunteer-scheduling application used by four regional food banks."
       ]
+    },
+    {
+      "organization": "Raleigh Open Source Collective",
+      "position": "Board Member",
+      "tenures": [
+        {
+          "startDate": "2016-01-01",
+          "endDate": "2017-12-31"
+        },
+        {
+          "startDate": "2021-01-01",
+          "endDate": "2022-12-31"
+        }
+      ],
+      "summary": "Organized the regional conference and the monthly meetups that lead up to it."
     }
   ],
   "education": [

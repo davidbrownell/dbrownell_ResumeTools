@@ -8,6 +8,9 @@
      .section-header             The heading that introduces a section: .icon and .heading.
      .section-body               Everything that a section displays: .entry or .detail children.
      .entry                      One item within a section: .entry-header and .entry-body.
+     .date-range                 One period of time within an entry header: .startDate and an
+                                 optional .endDate. Experience that was interrupted and later
+                                 resumed displays one per period of employment.
      .detail                     One short value within a section: .icon and .value.
      .icon                       An empty element; this stylesheet decides which icon it displays.
 
@@ -341,10 +344,11 @@ ul {
     letter-spacing: .02em;
 }
 
-// The dates are displayed as a single range; a start date may stand alone (a project that names no
-// end date, for example), so the separator is displayed only when an end date follows it. The
-// separator is not followed by a space, as the markup places the dates on separate lines and that
-// line break is displayed as one; the space that precedes the separator is escaped so that it
+// The dates of one range are displayed as a single value; a start date may stand alone (a project
+// that names no end date, for example), so the separator is displayed only when an end date follows
+// it. A range occupies a line of its own, which is what separates one period of time from the next.
+// The separator is not followed by a space, as the markup places the dates on separate lines and
+// that line break is displayed as one; the space that precedes the separator is escaped so that it
 // survives compression.
 .startDate:has(+ .endDate)::after {
     content: "\00a0\2013";

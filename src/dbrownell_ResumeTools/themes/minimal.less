@@ -235,6 +235,17 @@ ul {
     content: "\00a0\2013\00a0";
 }
 
+// The dates of a range are read as a single value, so they are laid out on one line; the margin
+// separates one period of time from the next when an entry names several.
+.date-range {
+    display: flex;
+    flex: 0 0 auto;
+
+    +.date-range {
+        margin-left: 1rem;
+    }
+}
+
 // The value that names an entry within a section, whatever the schema calls it. Nothing here is
 // distinguished by color, so it is distinguished by the emphasis of the face instead.
 .position,

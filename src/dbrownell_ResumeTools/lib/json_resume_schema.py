@@ -5,13 +5,14 @@ import re
 
 from dataclasses import dataclass, field
 from datetime import date as CalendarDate  # noqa: N812
-from typing import TYPE_CHECKING, Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any, Self
 
 import yaml
 
-from pydantic import BeforeValidator, TypeAdapter
+from pydantic import BeforeValidator, TypeAdapter, model_validator
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
     from pathlib import Path
 
 
@@ -66,6 +67,18 @@ def _ToResumeDate(value: Any) -> Any:  # noqa: ANN401
 # A date is complete, or it omits the day, or it omits the month as well.
 _DATE_REGEX = re.compile(r"^(\d{4})(?:-(\d{2})(?:-(\d{2}))?)?$")
 
+
+# ----------------------------------------------------------------------
+def _ToSortableDate(value: ResumeDate) -> tuple[int, int, int]:
+    """Convert a date into the value that orders it against another.
+
+    The month and the day that follows it are optional, so a date that omits them is ordered before
+    one that names them within the same year.
+    """
+
+    return (value.year, value.month or 0, value.day or 0)
+
+
 Date = Annotated[ResumeDate, BeforeValidator(_ToResumeDate)]
 
 
@@ -117,8 +130,92 @@ class Basics:
 # |  Sections
 # |
 # ----------------------------------------------------------------------
+def _ValidateDateRange(start_date: Date | None, end_date: Date | None) -> None:
+    """Ensure that a period of time that ends is one that also began.
+
+    `Tenure` expresses the same constraint by requiring the date that begins it.
+    """
+
+    if start_date is None and end_date is not None:
+        msg = "'endDate' cannot be provided without 'startDate'."
+        raise ValueError(msg)
+
+
+# ----------------------------------------------------------------------
+class _DatedContent:
+    """Content that spans a period of time whose beginning and end are both optional."""
+
+    startDate: Date | None  # noqa: N815
+    endDate: Date | None  # noqa: N815
+
+    # ----------------------------------------------------------------------
+    @model_validator(mode="after")
+    def _ValidateDates(self) -> Self:
+        _ValidateDateRange(self.startDate, self.endDate)
+        return self
+
+
+# ----------------------------------------------------------------------
 @dataclass(kw_only=True)
-class Work:
+class Tenure:
+    """<work.tenures>, <volunteer.tenures>"""  # noqa: D400, D415
+
+    startDate: Date  # noqa: N815
+    endDate: Date | None = None  # noqa: N815
+
+
+# ----------------------------------------------------------------------
+class _TenuredExperience:
+    """Experience that was provided over one or more periods of time.
+
+    Experience that spans a single period of time names its dates directly; `tenures` describes
+    experience that was interrupted and later resumed, so that everything beside it is written once
+    rather than once per period of time.
+    """
+
+    startDate: Date | None  # noqa: N815
+    endDate: Date | None  # noqa: N815
+    tenures: list[Tenure]
+
+    # ----------------------------------------------------------------------
+    def EnumTenures(self) -> Iterator[Tenure]:
+        """Enumerate the tenures, whichever of the two forms was used to describe them.
+
+        The most recent tenure is enumerated first so that everything which displays them leads with
+        the period of time that matters most, no matter the order that they were written in.
+        """
+
+        if self.startDate is not None:
+            yield Tenure(startDate=self.startDate, endDate=self.endDate)
+
+        yield from sorted(
+            self.tenures,
+            key=lambda tenure: _ToSortableDate(tenure.startDate),
+            reverse=True,
+        )
+
+    # ----------------------------------------------------------------------
+    @model_validator(mode="after")
+    def _ValidateTenures(self) -> Self:
+        """Ensure that exactly one of the two forms describes the periods of time involved."""
+
+        if self.tenures:
+            if self.startDate is not None or self.endDate is not None:
+                msg = "'startDate' and 'endDate' describe a single tenure and cannot be combined with 'tenures'."
+                raise ValueError(msg)
+        else:
+            _ValidateDateRange(self.startDate, self.endDate)
+
+            if self.startDate is None:
+                msg = "'startDate' or 'tenures' must be provided."
+                raise ValueError(msg)
+
+        return self
+
+
+# ----------------------------------------------------------------------
+@dataclass(kw_only=True)
+class Work(_TenuredExperience):
     """<work>"""  # noqa: D400, D415
 
     name: str  # the company
@@ -126,30 +223,32 @@ class Work:
     description: str | None = None  # e.g. Social Media Company
     position: str
     url: Uri | None = None
-    startDate: Date  # noqa: N815
+    startDate: Date | None = None  # noqa: N815
     endDate: Date | None = None  # noqa: N815
+    tenures: list[Tenure] = field(default_factory=list)
     summary: str
     highlights: list[str] = field(default_factory=list)
 
 
 # ----------------------------------------------------------------------
 @dataclass(kw_only=True)
-class Volunteer:
+class Volunteer(_TenuredExperience):
     """<volunteer>"""  # noqa: D400, D415
 
     organization: str
     location: str | None = None  # e.g. Menlo Park, CA
     position: str
     url: Uri | None = None
-    startDate: Date  # noqa: N815
+    startDate: Date | None = None  # noqa: N815
     endDate: Date | None = None  # noqa: N815
+    tenures: list[Tenure] = field(default_factory=list)
     summary: str
     highlights: list[str] = field(default_factory=list)
 
 
 # ----------------------------------------------------------------------
 @dataclass(kw_only=True)
-class Education:
+class Education(_DatedContent):
     """<education>"""  # noqa: D400, D415
 
     institution: str
@@ -236,7 +335,7 @@ class Reference:
 
 # ----------------------------------------------------------------------
 @dataclass(kw_only=True)
-class Project:
+class Project(_DatedContent):
     """<projects>"""  # noqa: D400, D415
 
     name: str

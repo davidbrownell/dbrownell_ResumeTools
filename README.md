@@ -46,6 +46,8 @@ uv run dbrownell_ResumeTools <content_filename> <style_filename> [<output_direct
 | `<style_filename>` | A `.css` or `.less` stylesheet, provided as a filename or as an `http`/`https` url that references one; less content is compiled to css. |
 | `<output_directory>` | Directory populated with the generated `index.html` and the stylesheet that it references; a temporary directory that is removed once the process exits is used when this argument is not provided. |
 
+Content is validated against [json_resume.SimpleSchema](https://github.com/davidbrownell/dbrownell_ResumeTools/blob/main/src/dbrownell_ResumeTools/lib/json_resume.SimpleSchema), which is the [JSON Resume](https://jsonresume.org/) schema with a few optional additions; a `work` or `volunteer` entry whose employment was interrupted and later resumed, for example, names the `tenures` that describe it rather than a single `startDate` and `endDate`.
+
 [Sample content](https://github.com/davidbrownell/dbrownell_ResumeTools/tree/main/src/dbrownell_ResumeTools/samples) and [themes](https://github.com/davidbrownell/dbrownell_ResumeTools/tree/main/src/dbrownell_ResumeTools/themes) are included with the package; this command generates and displays the sample resume when it is run from the directory that contains them:
 
 ```shell
@@ -64,7 +66,7 @@ uv run dbrownell_ResumeTools resume.json https://raw.githubusercontent.com/david
 Print the displayed content to a pdf from the browser itself (`Ctrl+P` / `Cmd+P`, then "Save as PDF"). The bundled stylesheets define `@media print` rules that compact the content for a printed page, so no separate command is involved. The pdf produced by each bundled stylesheet is linked in [the table below](#writing-a-stylesheet).
 
 ### Writing a stylesheet
-The generated html assigns a class to every value that names what the value is: the section that contains it (`work`, `education`, `skills`, ...), its role within that section (`section-header`, `entry`, `entry-body`, `detail`, ...), and the schema field that produced it (`position`, `startDate`, `score`, `keyword`, ...). Icons are empty `icon` elements that a stylesheet fills in through `::before`. That contract is documented in full at the top of [standard.less](https://github.com/davidbrownell/dbrownell_ResumeTools/blob/main/src/dbrownell_ResumeTools/themes/standard.less), and a stylesheet is free to lay those classes out however it likes.
+The generated html assigns a class to every value that names what the value is: the section that contains it (`work`, `education`, `skills`, ...), its role within that section (`section-header`, `entry`, `entry-body`, `date-range`, `detail`, ...), and the schema field that produced it (`position`, `startDate`, `score`, `keyword`, ...). Icons are empty `icon` elements that a stylesheet fills in through `::before`. That contract is documented in full at the top of [standard.less](https://github.com/davidbrownell/dbrownell_ResumeTools/blob/main/src/dbrownell_ResumeTools/themes/standard.less), and a stylesheet is free to lay those classes out however it likes.
 
 Six stylesheets are bundled to demonstrate the range. All of them are applied to the same `resume.json` and to the same generated html:
 
